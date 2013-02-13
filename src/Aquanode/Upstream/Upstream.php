@@ -23,7 +23,7 @@ class Upstream {
 	public function __construct($config)
 	{
 		//default settings
-		$this->config = array_merge(Config::get('upstream::defaults'), $config);
+		$this->config = array_merge(Config::get('upstream::upload'), $config);
 	}
 
 	//function called by the form
@@ -64,24 +64,24 @@ class Upstream {
 
 			//create files array
 			$files = array();
-			foreach ($_FILES as $key=>$fileInfo) {
+			foreach ($_FILES as $key => $fileInfo) {
 				if (!empty($fileInfo)) {
 					if (is_array($fileInfo['name'])) { //array of files exists rather than just a single file; loop through them
 						for ($f=0; $f < count($fileInfo['name']); $f++) {
-							$files[] = array('name'=>		trim($fileInfo['name'][$f]),
-										 	 'type'=>		$fileInfo['type'][$f],
-											 'tmpName'=>	$fileInfo['tmpName'][$f],
-											 'error'=>		$fileInfo['error'][$f],
-											 'size'=>		$fileInfo['size'][$f],
-											 'key'=>		$key);
+							$files[] = array('name'    => trim($fileInfo['name'][$f]),
+										 	 'type'    => $fileInfo['type'][$f],
+											 'tmpName' => $fileInfo['tmpName'][$f],
+											 'error'   => $fileInfo['error'][$f],
+											 'size'    => $fileInfo['size'][$f],
+											 'key'     => $key);
 						}
 					} else {
-						$files[] = array('name'=>		trim($fileInfo['name']),
-										 'type'=>		$fileInfo['type'],
-										 'tmpName'=>	$fileInfo['tmpName'],
-										 'error'=>		$fileInfo['error'],
-										 'size'=>		$fileInfo['size'],
-										 'key'=>		$key);
+						$files[] = array('name'    => trim($fileInfo['name']),
+										 'type'    => $fileInfo['type'],
+										 'tmpName' => $fileInfo['tmpName'],
+										 'error'   => $fileInfo['error'],
+										 'size'    => $fileInfo['size'],
+										 'key'     => $key);
 					}
 				}
 			}
@@ -433,18 +433,18 @@ class Upstream {
 						$deleteURL_full = $config['deleteURL'];
 						if ($config['deleteURL'] != "") $deleteURL_full .= "/".str_replace('.', '_', $filename);
 
-						$file = array('name'=>			$filename,
-									  'url'=> 			URL::to($path.$filename),
-									  'fileSize'=> 	filesize($path.$filename),
-									  'fileType'=> 	filetype($path.$filename),
-									  'isImage'=>		in_array($fileExt, array('png', 'jpg', 'jpeg', 'gif')) ? true:false,
-									  'deleteURL'=>	$deleteURL_full,
-									  'deleteType'=>	'DELETE',
-									  'error'=>			false);
+						$file = array('name'       => $filename,
+									  'url'        => URL::to($path.$filename),
+									  'fileSize'   => filesize($path.$filename),
+									  'fileType'   => filetype($path.$filename),
+									  'isImage'    => in_array($fileExt, array('png', 'jpg', 'jpeg', 'gif')) ? true:false,
+									  'deleteURL'  => $deleteURL_full,
+									  'deleteType' => 'DELETE',
+									  'error'      => false);
 						if ($file['isImage'] && is_file($path.'thumbs/'.$filename)) {
-							$file['thumbnailURL'] = 	URL::to($path.'thumbs/'.$filename);
+							$file['thumbnailURL'] = URL::to($path.'thumbs/'.$filename);
 						} else {
-							$file['thumbnailURL'] = 	"";
+							$file['thumbnailURL'] = "";
 						}
 						$result[] = $file;
 					}
@@ -495,27 +495,27 @@ class Upstream {
 	public static function createDirectory($path)
 	{
 		$pathArray = explode('/', $path);
-		$path_partial = "";
-		$directories_created = 0;
+		$pathPartial = "";
+		$directoriesCreated = 0;
 		for ($p=0; $p < count($pathArray); $p++) {
 			if ($pathArray[$p] != "") {
-				if ($path_partial != "") $path_partial .= "/";
-				$path_partial .= $pathArray[$p];
-				if (!is_dir($path_partial)) {
-					mkdir($path_partial);
-					$directories_created ++;
+				if ($pathPartial != "") $pathPartial .= "/";
+				$pathPartial .= $pathArray[$p];
+				if (!is_dir($pathPartial)) {
+					mkdir($pathPartial);
+					$directoriesCreated ++;
 				}
 			}
 		}
-		return $directories_created;
+		return $directoriesCreated;
 	}
 
 	public static function imageSize($image)
 	{
 		if (is_file($image)) {
 			$img = getimagesize($image);
-			return array('w'=>	$img['0'],
-						 'h'=>	$img['1']);
+			return array('w'=>	$img[0],
+						 'h'=>	$img[1]);
 		} else {
 			return array('w'=>	0,
 						 'h'=>	0);
@@ -560,7 +560,7 @@ class Upstream {
 
 	//function delete file
 	public function delete($file) {
-		$this->returnData = array('success'=>false);
+		$this->returnData = array('success' => false);
 		if (is_file($file)) $this->returnData['success']  = unlink($file);
 		$fileExt = File::extension($file);
 
@@ -592,9 +592,8 @@ class Upstream {
 	//get info and scan the directory
 	public function getScanFiles()
 	{
-
 		$fileName = isset($_REQUEST['file']) ?
-				basename(stripslashes($_REQUEST['file'])) : null;
+		basename(stripslashes($_REQUEST['file'])) : null;
 		if ($fileName) {
 			$info = $this->getFileObject($fileName);
 		} else {
@@ -662,7 +661,7 @@ class Upstream {
 
 				while ($quantity > $limit) { //if there are too many files of filetype being checked delete until at limit starting with oldest files
 					$oldestFile = -1;
-					foreach ($filesForType as $index=>$file) {
+					foreach ($filesForType as $index => $file) {
 						if ($oldestFile == -1) {
 							$oldestFile = $index;
 						} else {
