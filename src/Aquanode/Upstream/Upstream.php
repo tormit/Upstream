@@ -29,7 +29,7 @@ class Upstream {
 	//function called by the form
 	public static function make($config = array())
 	{
-		return new Upload($config);
+		return new Upstream($config);
 	}
 
 	public function upload($config = array())
