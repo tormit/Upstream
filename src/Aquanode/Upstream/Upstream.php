@@ -27,13 +27,12 @@ class Upstream {
 	}
 
 	//function called by the form
-
-	public static function initialize($config=array())
+	public static function initialize($config = array())
 	{
 		return new Upload($config);
 	}
 
-	public function upload($config=array())
+	public function upload($config = array())
 	{
 		//modify upload settings through a single config parameter
 		if (!empty($config)) $this->config = array_merge($this->config, $config);
@@ -201,19 +200,19 @@ class Upstream {
 								$resize_type = $this->config['imgResizeDefaultType'];
 								if ($this->config['imgCrop']) $resize_type = "crop";
 								if ($this->config['imgResize']) {
-									$resize_dimensions = array('w'=> $this->config['imgDimensions']['w'],
+									$resizeDimensions = array('w'=> $this->config['imgDimensions']['w'],
 															   'h'=> $this->config['imgDimensions']['h']);
 								
 								} else {
 									if ($maxWidthExceeded && $maxHeightExceeded) {
-										$resize_dimensions = array('w'=> $this->config['imgMaxWidth'],
+										$resizeDimensions = array('w'=> $this->config['imgMaxWidth'],
 																   'h'=> $this->config['imgMaxHeight']);
 									} else if ($maxWidthExceeded) {
-										$resize_dimensions = array('w'=> $this->config['imgMaxWidth'],
+										$resizeDimensions = array('w'=> $this->config['imgMaxWidth'],
 																   'h'=> false);
 										$resize_type = 'landscape';
 									} else if ($maxHeightExceeded) {
-										$resize_dimensions = array('w'=> false,
+										$resizeDimensions = array('w'=> false,
 																   'h'=> $this->config['imgMaxHeight']);
 										$resize_type = 'portrait';
 									}
@@ -221,22 +220,22 @@ class Upstream {
 
 								//resize image with Resizer bundle
 								Resizer::open($this->config['path'].$filename)
-									->resize($resize_dimensions['w'], $resize_dimensions['h'], $resize_type)
+									->resize($resizeDimensions['w'], $resizeDimensions['h'], $resize_type)
 									->save($this->config['path'].$filename, $this->config['imgResizeQuality']);
 							}
 
 							//create thumbnail image if necessary
 							if ($this->config['imgThumb']) {
-								$resize_dimensions = array('w'=> $this->config['imgDimensions']['tw'],
+								$resizeDimensions = array('w'=> $this->config['imgDimensions']['tw'],
 														   'h'=> $this->config['imgDimensions']['th']);
 
-								$thumbs_path = $this->config['path'].'thumbs/';
-								if ($this->config['createDir'] && !is_dir($thumbs_path)) static::createDirectory($thumbs_path);
-								if (is_dir($thumbs_path)) {
+								$thumbsPath = $this->config['path'].'thumbs/';
+								if ($this->config['createDir'] && !is_dir($thumbsPath)) static::createDirectory($thumbsPath);
+								if (is_dir($thumbsPath)) {
 									//resize image with Resizer bundle
 									Resizer::open($this->config['path'].$filename)
-										->resize($resize_dimensions['w'], $resize_dimensions['h'], 'crop')
-										->save($thumbs_path.$filename, $this->config['imgResizeQuality']);
+										->resize($resizeDimensions['w'], $resizeDimensions['h'], 'crop')
+										->save($thumbsPath.$filename, $this->config['imgResizeQuality']);
 								}
 							}
 						}
@@ -273,7 +272,7 @@ class Upstream {
 		}
 	}
 
-	public static function cropImage($configCrop=array())
+	public static function cropImage($configCrop = array())
 	{
 		$config = array_merge(Config::get('upstream::crop'), $configCrop);
 
@@ -368,7 +367,7 @@ class Upstream {
 		return $returnData;
 	}
 
-	public static function filename($originalFilename, $suffix=false){
+	public static function filename($originalFilename, $suffix = false){
 		$originalFileExt = File::extension($originalFilename);
 
 		//get filename
@@ -455,7 +454,7 @@ class Upstream {
 		return $result;
 	}
 
-	public static function dirFilenames($path='', $config=array())
+	public static function dirFilenames($path = '', $config = array())
 	{
 		if (!isset($config['fileTypeOrder'])) $config['fileTypeOrder'] = false;
 
@@ -481,7 +480,7 @@ class Upstream {
 		}
 	}
 
-	public static function uriToFilename($uri='')
+	public static function uriToFilename($uri = '')
 	{
 		$sections = explode('_', $uri); $filename = "";
 		$last = count($sections) - 1;
@@ -523,7 +522,7 @@ class Upstream {
 		}
 	}
 
-	public static function fileSize($file, $convert=true)
+	public static function fileSize($file, $convert = true)
 	{
 		if (is_file($file)) {
 			$fileSize = filesize($file);
@@ -636,7 +635,7 @@ class Upstream {
 		$this->allowed_types = $types;
 	}
 
-	public function dirFileLimits($directory='', $limits=array())
+	public function dirFileLimits($directory = '', $limits = array())
 	{
 		if (substr($directory, -1) != "/") $directory .= "/"; //add trailing slash to directory if it doesn't exist
 		$deletedFiles = array();
