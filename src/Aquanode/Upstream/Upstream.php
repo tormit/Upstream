@@ -430,15 +430,15 @@ class Upstream {
 						$filename = $entry;
 						$fileExt = File::extension($filename);
 
-						$deleteURL_full = $config['deleteURL'];
-						if ($config['deleteURL'] != "") $deleteURL_full .= "/".str_replace('.', '_', $filename);
+						$deleteFullURL = $config['deleteURL'];
+						if ($config['deleteURL'] != "") $deleteFullURL .= "/".str_replace('.', '_', $filename);
 
 						$file = array('name'       => $filename,
 									  'url'        => URL::to($path.$filename),
 									  'fileSize'   => filesize($path.$filename),
 									  'fileType'   => filetype($path.$filename),
 									  'isImage'    => in_array($fileExt, array('png', 'jpg', 'jpeg', 'gif')) ? true:false,
-									  'deleteURL'  => $deleteURL_full,
+									  'deleteURL'  => $deleteFullURL,
 									  'deleteType' => 'DELETE',
 									  'error'      => false);
 						if ($file['isImage'] && is_file($path.'thumbs/'.$filename)) {
