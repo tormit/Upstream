@@ -27,7 +27,7 @@ class Upstream {
 	}
 
 	//function called by the form
-	public static function initialize($config = array())
+	public static function make($config = array())
 	{
 		return new Upload($config);
 	}
@@ -51,9 +51,9 @@ class Upstream {
 		}
 
 		//format error triggers
-		if ($this->config['maxFileSize']) $this->config['maxFileSize'] = strtoupper(str_replace(' ', '', $this->config['maxFileSize']));
-		if ($this->config['imgMinWidth']) $this->config['imgMinWidth'] = str_replace('px', '', strtolower($this->config['imgMinWidth']));
-		if ($this->config['imgMinHeight'] $this->config['imgMinHeight'] = str_replace('px', '', strtolower($this->config['imgMinHeight']));
+		if ($this->config['maxFileSize'])  $this->config['maxFileSize'] = strtoupper(str_replace(' ', '', $this->config['maxFileSize']));
+		if ($this->config['imgMinWidth'])  $this->config['imgMinWidth'] = str_replace('px', '', strtolower($this->config['imgMinWidth']));
+		if ($this->config['imgMinHeight']) $this->config['imgMinHeight'] = str_replace('px', '', strtolower($this->config['imgMinHeight']));
 
 		$this->returnData = array();
 		$this->returnData[] = array('error'=> 'Something went wrong. Please try again.');
