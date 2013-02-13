@@ -65,23 +65,23 @@ class Upstream {
 
 			//create files array
 			$files = array();
-			foreach ($_FILES as $key=>$file_info) {
-				if (!empty($file_info)) {
-					if (is_array($file_info['name'])) { //array of files exists rather than just a single file; loop through them
-						for ($f=0; $f < count($file_info['name']); $f++) {
-							$files[] = array('name'=>		trim($file_info['name'][$f]),
-										 	 'type'=>		$file_info['type'][$f],
-											 'tmpName'=>	$file_info['tmpName'][$f],
-											 'error'=>		$file_info['error'][$f],
-											 'size'=>		$file_info['size'][$f],
+			foreach ($_FILES as $key=>$fileInfo) {
+				if (!empty($fileInfo)) {
+					if (is_array($fileInfo['name'])) { //array of files exists rather than just a single file; loop through them
+						for ($f=0; $f < count($fileInfo['name']); $f++) {
+							$files[] = array('name'=>		trim($fileInfo['name'][$f]),
+										 	 'type'=>		$fileInfo['type'][$f],
+											 'tmpName'=>	$fileInfo['tmpName'][$f],
+											 'error'=>		$fileInfo['error'][$f],
+											 'size'=>		$fileInfo['size'][$f],
 											 'key'=>		$key);
 						}
 					} else {
-						$files[] = array('name'=>		trim($file_info['name']),
-										 'type'=>		$file_info['type'],
-										 'tmpName'=>	$file_info['tmpName'],
-										 'error'=>		$file_info['error'],
-										 'size'=>		$file_info['size'],
+						$files[] = array('name'=>		trim($fileInfo['name']),
+										 'type'=>		$fileInfo['type'],
+										 'tmpName'=>	$fileInfo['tmpName'],
+										 'error'=>		$fileInfo['error'],
+										 'size'=>		$fileInfo['size'],
 										 'key'=>		$key);
 					}
 				}
