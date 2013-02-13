@@ -2,8 +2,8 @@
 
 /*----------------------------------------------------------------------------------------------------------
 	Upstream
-		A simple composer package that assists in file uploads and image resizing/cropping. Works great
-		with jCrop and jquery-file-upload.
+		A simple composer package that assists in file uploads and image resizing/cropping.
+		Works great with jCrop and jquery-file-upload.
 
 		created by Cody Jassman / Aquanode - http://aquanode.com
 		last updated on February 12, 2013
