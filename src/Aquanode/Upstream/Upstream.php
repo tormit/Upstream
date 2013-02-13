@@ -6,8 +6,11 @@
 		Works great with jCrop and jquery-file-upload.
 
 		created by Cody Jassman / Aquanode - http://aquanode.com
-		last updated on February 12, 2013
+		last updated on February 13, 2013
 ----------------------------------------------------------------------------------------------------------*/
+
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\File;
 
 class Upstream {
 
@@ -70,7 +73,7 @@ class Upstream {
 						for ($f=0; $f < count($fileInfo['name']); $f++) {
 							$files[] = array('name'    => trim($fileInfo['name'][$f]),
 										 	 'type'    => $fileInfo['type'][$f],
-											 'tmpName' => $fileInfo['tmpName'][$f],
+											 'tmpName' => $fileInfo['tmp_name'][$f],
 											 'error'   => $fileInfo['error'][$f],
 											 'size'    => $fileInfo['size'][$f],
 											 'key'     => $key);
@@ -78,7 +81,7 @@ class Upstream {
 					} else {
 						$files[] = array('name'    => trim($fileInfo['name']),
 										 'type'    => $fileInfo['type'],
-										 'tmpName' => $fileInfo['tmpName'],
+										 'tmpName' => $fileInfo['tmp_name'],
 										 'error'   => $fileInfo['error'],
 										 'size'    => $fileInfo['size'],
 										 'key'     => $key);
@@ -92,9 +95,9 @@ class Upstream {
 				$originalFileExt = strtolower(File::extension($originalFilename));
 
 				if (!$this->config['filename']) {
-					$filename = Upload::filename($originalFilename);
+					$filename = static::filename($originalFilename);
 				} else {
-					$filename = Upload::filename($this->config['filename']);
+					$filename = static::filename($this->config['filename']);
 				}
 				$fileExt = File::extension($filename);
 
@@ -300,9 +303,9 @@ class Upstream {
 		$newPath = $config['newPath'];
 
 		if (!$config['newFilename']) {
-			$filename = Upload::filename($config['filename']);
+			$filename = static::filename($config['filename']);
 		} else {
-			$filename = Upload::filename($config['newFilename']);
+			$filename = static::filename($config['newFilename']);
 		}
 		$fileExt = File::extension($filename);
 
@@ -338,7 +341,7 @@ class Upstream {
 
 			if (!is_dir($config['newPath'])) {
 				if ($config['createDir']) {
-					Upload::createDirectory($config['newPath']);
+					static::createDirectory($config['newPath']);
 				} else {
 					$returnData['error'] = 'The directory you specified does not exist ('.$config['newPath'].').';
 					return $returnData;
