@@ -11,6 +11,9 @@
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\URL;
+
+use SimpleResize as Resize;
 
 class Upstream {
 
@@ -108,7 +111,7 @@ class Upstream {
 				}
 
 				//create directory if necessary
-				if ($this->config['createDir'] && !is_dir($this->config['path'])) static::createDirectory($this->config['path']);
+				if ($this->config['createDirectory'] && !is_dir($this->config['path'])) static::createDirectory($this->config['path']);
 
 				//if file is an image
 				$dimensions = array();
@@ -200,31 +203,31 @@ class Upstream {
 							if ($this->config['imgResize'] || ($this->config['imgResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded))) {
 
 								//configure resized image dimensions
-								$resize_type = $this->config['imgResizeDefaultType'];
-								if ($this->config['imgCrop']) $resize_type = "crop";
+								$resizeType = $this->config['imgResizeDefaultType'];
+								if ($this->config['imgCrop']) $resizeType = "crop";
 								if ($this->config['imgResize']) {
-									$resizeDimensions = array('w'=> $this->config['imgDimensions']['w'],
-															   'h'=> $this->config['imgDimensions']['h']);
+									$resizeDimensions = array('w' => $this->config['imgDimensions']['w'],
+															  'h' => $this->config['imgDimensions']['h']);
 								
 								} else {
 									if ($maxWidthExceeded && $maxHeightExceeded) {
-										$resizeDimensions = array('w'=> $this->config['imgMaxWidth'],
-																   'h'=> $this->config['imgMaxHeight']);
+										$resizeDimensions = array('w' => $this->config['imgMaxWidth'],
+																  'h' => $this->config['imgMaxHeight']);
 									} else if ($maxWidthExceeded) {
-										$resizeDimensions = array('w'=> $this->config['imgMaxWidth'],
-																   'h'=> false);
-										$resize_type = 'landscape';
+										$resizeDimensions = array('w' => $this->config['imgMaxWidth'],
+																  'h' => false);
+										$resizeType = 'landscape';
 									} else if ($maxHeightExceeded) {
-										$resizeDimensions = array('w'=> false,
-																   'h'=> $this->config['imgMaxHeight']);
-										$resize_type = 'portrait';
+										$resizeDimensions = array('w' => false,
+																  'h' => $this->config['imgMaxHeight']);
+										$resizeType = 'portrait';
 									}
 								}
 
-								//resize image with Resizer bundle
-								Resizer::open($this->config['path'].$filename)
-									->resize($resizeDimensions['w'], $resizeDimensions['h'], $resize_type)
-									->save($this->config['path'].$filename, $this->config['imgResizeQuality']);
+								//resize image with SimpleResize
+								$resize = new Resize($this->config['path'].$filename);
+								$resize->resizeImage($resizeDimensions['w'], $resizeDimensions['h'], $resizeType);
+								$resize->saveImage($this->config['path'].$filename, $this->config['imgResizeQuality']);
 							}
 
 							//create thumbnail image if necessary
@@ -233,18 +236,23 @@ class Upstream {
 														   'h'=> $this->config['imgDimensions']['th']);
 
 								$thumbsPath = $this->config['path'].'thumbs/';
-								if ($this->config['createDir'] && !is_dir($thumbsPath)) static::createDirectory($thumbsPath);
+								if ($this->config['createDirectory'] && !is_dir($thumbsPath)) static::createDirectory($thumbsPath);
 								if (is_dir($thumbsPath)) {
-									//resize image with Resizer bundle
-									Resizer::open($this->config['path'].$filename)
-										->resize($resizeDimensions['w'], $resizeDimensions['h'], 'crop')
-										->save($thumbsPath.$filename, $this->config['imgResizeQuality']);
+									//resize image with SimpleResize
+									$resize = new Resize($this->config['path'].$filename);
+									$resize->resizeImage($resizeDimensions['w'], $resizeDimensions['h'], 'crop');
+									$resize->saveImage($thumbsPath.$filename, $this->config['imgResizeQuality']);
 								}
 							}
 						}
 
 						//set return data
-						$url = URL::to(str_replace('public/', '', $this->config['path'].$filename));
+						$url          = URL::to(str_replace('public/', '', $this->config['path'].$filename));
+						if ($this->config['imgThumb']) {
+							$thumbnailUrl = URL::to(str_replace('public/', '', $this->config['path'].'thumbs/'.$filename));
+						} else {
+							$thumbnailUrl = "";
+						}
 						$this->returnData[($f - 1)] = 	array(
 							'name'         => $filename,
 							'path'         => $this->config['path'],
@@ -252,8 +260,8 @@ class Upstream {
 							'fileSize'     => $file['size'],
 							'fileType'     => $originalFileExt,
 							'isImage'      => in_array($originalFileExt, array('png', 'jpg', 'jpeg', 'gif')) ? true:false,
-							'thumbnailURL' => $url,
-							'deleteURL'    => '', //some of these variables are added as dummy variables to allow it to work with jquery-file-upload out of the box
+							'thumbnailUrl' => $thumbnailUrl,
+							'deleteUrl'    => '', //some of these variables are added as dummy variables to allow it to work with jquery-file-upload out of the box
 							'deleteType'   => 'DELETE',
 							'error'        => false
 						);
@@ -267,7 +275,7 @@ class Upstream {
 			} //end foreach files
 
 			//return result
-			if ($this->config['returnJSON']) {
+			if ($this->config['returnJson']) {
 				return json_encode($this->returnData);
 			} else {
 				return $this->returnData;
@@ -340,7 +348,7 @@ class Upstream {
 			}
 
 			if (!is_dir($config['newPath'])) {
-				if ($config['createDir']) {
+				if ($config['createDirectory']) {
 					static::createDirectory($config['newPath']);
 				} else {
 					$returnData['error'] = 'The directory you specified does not exist ('.$config['newPath'].').';
@@ -474,7 +482,7 @@ class Upstream {
 				if (is_file($path.$entry)) $files[] = $entry;
 			}
 		}
-		if (IS_AJAX && isset($config['returnJSON']) && $config['returnJSON']) {
+		if (IS_AJAX && isset($config['returnJson']) && $config['returnJson']) {
 			return json_encode($files);
 		} else if (isset($config['return_str']) && $config['return_str']) {
 			return implode(', ', $files);

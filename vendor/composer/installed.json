@@ -42,5 +42,40 @@
             }
         ],
         "description": "Various utilities and support functions."
+    },
+    {
+        "name": "julien-c/simple-resize",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/julien-c/SimpleResize",
+            "reference": "9823a4dc618a9d3471525c5dafd5f365d70675d4"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/julien-c/SimpleResize/zipball/9823a4dc618a9d3471525c5dafd5f365d70675d4",
+            "reference": "9823a4dc618a9d3471525c5dafd5f365d70675d4",
+            "shasum": ""
+        },
+        "require": {
+            "ext-gd": "*"
+        },
+        "time": "2012-10-27 10:37:09",
+        "type": "library",
+        "installation-source": "source",
+        "autoload": {
+            "psr-0": {
+                "SimpleResize": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "authors": [
+            {
+                "name": "Julien Chaumond",
+                "email": "chaumond@gmail.com"
+            }
+        ],
+        "description": "Simple Composer port of Jarrod Oberto's Image Resizing class"
     }
 ]

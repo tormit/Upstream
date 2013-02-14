@@ -12,10 +12,10 @@ return array(
 	*/
 	'upload' => array(
 		'path'                   => 'public/uploads/',
-		'createDir'              => false,
+		'createDirectory'        => false,
 		'filename'               => false,
 		'overwrite'              => false,
-		'returnJSON'             => false,
+		'returnJson'             => false,
 
 		//error triggers
 		'fileTypes'              => '*',
@@ -30,8 +30,8 @@ return array(
 		//image resizing
 		'imgResize'              => false,
 		'imgResizeMax'           => false, //used in conjunction with imgMaxWidth and/or imgMaxHeight to resize only if image exceeds maximums
-		'imgResize_default_type' => 'landscape', //if resizing but not cropping, this is the default cropping option (see Resizer bundle options)
-		'imgResize_quality'      => 75,
+		'imgResizeDefaultType'   => 'landscape', //if resizing but not cropping, this is the default cropping option (see Resizer bundle options)
+		'imgResizeQuality'       => 75,
 		'imgThumb'               => false,
 		'imgCrop'                => false,
 		'imgCropThumb'           => true,
@@ -44,13 +44,13 @@ return array(
 	),
 
 	'crop' => array(
-		'path'          => true, //set this to true to use the same path as the upload config above
-		'newPath'       => false,
-		'createDir'     => false,
-		'filename'      => '',
-		'newFilename'   => false,
-		'overwrite'     => false,
-		'cropPosition'  => array(
+		'path'            => true, //set this to true to use the same path as the upload config above
+		'newPath'         => false,
+		'createDirectory' => false,
+		'filename'        => '',
+		'newFilename'     => false,
+		'overwrite'       => false,
+		'cropPosition'    => array(
 			'x' => 0,
 			'y' => 0,
 			'w' => 120,
