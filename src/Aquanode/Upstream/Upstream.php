@@ -248,8 +248,10 @@ class Upstream {
 
 						//set return data
 						$url          = URL::to(str_replace('public/', '', $this->config['path'].$filename));
+						if ($this->config['noCacheUrl']) $url .= '?'.rand(1, 99999);
 						if ($this->config['imgThumb']) {
 							$thumbnailUrl = URL::to(str_replace('public/', '', $this->config['path'].'thumbs/'.$filename));
+							if ($this->config['noCacheUrl']) $thumbnailUrl .= '?'.rand(1, 99999);
 						} else {
 							$thumbnailUrl = "";
 						}

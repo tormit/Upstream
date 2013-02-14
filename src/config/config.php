@@ -16,6 +16,7 @@ return array(
 		'filename'               => false,
 		'overwrite'              => false,
 		'returnJson'             => false,
+		'noCacheUrl'             => true,
 
 		//error triggers
 		'fileTypes'              => '*',
