@@ -100,7 +100,11 @@ class Upstream {
 				if (!$this->config['filename']) {
 					$filename = static::filename($originalFilename);
 				} else {
-					$filename = static::filename($this->config['filename']);
+					if (in_array($this->config['filename'], array('LOWERCASE', 'UNDERSCORE', 'LOWERCASE-UNDERSCORE', 'RANDOM'))) {
+						$filename = static::filename($originalFilename, $this->config['filename']);
+					} else {
+						$filename = static::filename($this->config['filename']);
+					}
 				}
 				$fileExt = File::extension($filename);
 
@@ -380,42 +384,43 @@ class Upstream {
 		return $returnData;
 	}
 
-	public static function filename($originalFilename, $suffix = false){
-		$originalFileExt = File::extension($originalFilename);
+	public static function filename($filename, $filenameModifier = false, $suffix = false)
+	{
+		$fileExt = File::extension($filename);
+
+		$newFilename = strtr($filename, 'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ', 'AAAAAACEEEEIIIIOOOOOUUUUYaaaaaaceeeeiiiioooooouuuuyy');
+		$filename = preg_replace('/([^.a-z0-9]+)/i', '_', $filename); //replace characters other than letters, numbers and . by _
 
 		//get filename
-		if ($originalFilename == "LOWERCASE") {
-			$filename = strtolower($originalFilename);
-		} else if ($originalFilename == "UNDERSCORE") {
-			$filename = str_replace(' ', '_', str_replace('-', '_', $originalFilename));
-		} else if ($originalFilename == "LOWERCASE-UNDERSCORE") {
-			$filename = strtolower(str_replace(' ', '_', str_replace('-', '_', $originalFilename)));
-		} else if ($originalFilename == "RANDOM") {
-			$filename = substr(md5(rand(1, 9999999)), 0, 10);
+		if ($filenameModifier == "LOWERCASE") {
+			$newFilename = strtolower($newFilename);
+		} else if ($filenameModifier == "UNDERSCORE") {
+			$newFilename = str_replace(' ', '_', str_replace('-', '_', $newFilename));
+		} else if ($filenameModifier == "LOWERCASE-UNDERSCORE") {
+			$newFilename = strtolower(str_replace(' ', '_', str_replace('-', '_', $newFilename)));
+		} else if ($filenameModifier == "RANDOM") {
+			$newFilename = substr(md5(rand(1, 9999999)), 0, 10);
 		} else {
-			$filename = strtr($originalFilename, 'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ', 'AAAAAACEEEEIIIIOOOOOUUUUYaaaaaaceeeeiiiioooooouuuuyy');
-			$filename = preg_replace('/([^.a-z0-9]+)/i', '_', $filename); //replace characters other than letters, numbers and . by _
-
 			if ($suffix && $suffix != "") { //append suffix if it is set
-				$fileExt = File::extension($filename);
-				$filename = str_replace('.'.$fileExt, '', $filename); //remove extension
-				$filename .= '_'.$suffix.'.'.$fileExt;
+				$fileExt = File::extension($newFilename);
+				$newFilename = str_replace('.'.$fileExt, '', $newFilename); //remove extension
+				$newFilename .= '_'.$suffix.'.'.$fileExt;
 			}
 		}
 
 		//get file extension
-		$fileExt = File::extension($filename);
-		if ($fileExt == "ext") $fileExt = $originalFileExt;
-		$add_ext = false;
-		if ($fileExt == "") {
-			$fileExt = $originalFileExt;
-			$add_ext = true;
+		$newFileExt = File::extension($newFilename);
+		if ($fileExt == "ext") $newFileExt = $fileExt;
+		$addExt = false;
+		if ($newFileExt == "") {
+			$newFileExt = $fileExt;
+			$addExt = true;
 		}
-		if ($fileExt == "jpeg") $fileExt = "jpg";
-		if ($add_ext && $fileExt != "") $filename .= '.'.$fileExt;
-		$filename = str_replace('.ext', '.'.$originalFileExt, $filename); //replace .ext with original file extension
+		if ($newFileExt == "jpeg") $newFileExt = "jpg";
+		if ($addExt && $newFileExt != "") $filename .= '.'.$newFileExt;
+		$newFilename = str_replace('.ext', '.'.$fileExt, $newFilename); //replace .ext with original file extension
 
-		return $filename;
+		return $newFilename;
 	}
 
 	public static function dirFiles($path = false, $config = array())
@@ -425,7 +430,7 @@ class Upstream {
 			$path = $configDefault['path'];
 		}
 
-		if (!isset($config['deleteURL']))      $config['deleteURL'] = "";
+		if (!isset($config['deleteURL']))     $config['deleteURL'] = "";
 		if (!isset($config['fileTypeOrder'])) $config['fileTypeOrder'] = false;
 
 		$result = array();
@@ -455,9 +460,9 @@ class Upstream {
 									  'deleteType' => 'DELETE',
 									  'error'      => false);
 						if ($file['isImage'] && is_file($path.'thumbs/'.$filename)) {
-							$file['thumbnailURL'] = URL::to($path.'thumbs/'.$filename);
+							$file['thumbnailUrl'] = URL::to($path.'thumbs/'.$filename);
 						} else {
-							$file['thumbnailURL'] = "";
+							$file['thumbnailUrl'] = "";
 						}
 						$result[] = $file;
 					}
@@ -651,11 +656,13 @@ class Upstream {
 	{
 		if (substr($directory, -1) != "/") $directory .= "/"; //add trailing slash to directory if it doesn't exist
 		$deletedFiles = array();
+
 		if (is_dir($directory) && $handle = opendir($directory)) {
 			foreach ($limits as $types=>$limit) {
-				if ($types == "image")	$types = array('jpg', 'gif', 'png');
-				if ($types == "vector")	$types = array('ai', 'eps', 'svg');
-				if (!is_array($types)) $types = explode('|', $types);
+
+				if ($types == "image")  $types = array('jpg', 'gif', 'png');
+				if ($types == "vector") $types = array('ai', 'eps', 'svg');
+				if (!is_array($types))  $types = explode('|', $types);
 
 				$filesForType = array();
 				$quantity = 0;
@@ -688,7 +695,6 @@ class Upstream {
 						unset($filesForType[$oldestFile]);
 						$quantity --;
 					}
-					//$quantity --;
 				} //end while quantity > limit
 				rewinddir($handle);
 			} //end foreach limits
