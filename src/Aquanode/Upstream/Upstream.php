@@ -250,17 +250,28 @@ class Upstream {
 							}
 						}
 
-						//set return data
-						$url          = URL::to(str_replace('public/', '', $this->config['path'].$filename));
+						//set URL for return data
+						$url = URL::to(str_replace('public/', '', $this->config['path'].$filename));
 						if ($this->config['noCacheUrl']) $url .= '?'.rand(1, 99999);
+
+						//set thumbnail image for return data
 						if ($this->config['imgThumb']) {
 							$thumbnailUrl = URL::to(str_replace('public/', '', $this->config['path'].'thumbs/'.$filename));
 							if ($this->config['noCacheUrl']) $thumbnailUrl .= '?'.rand(1, 99999);
 						} else {
-							$thumbnailUrl = "";
+							$thumbnailUrl = $this->config['defaultThumb'];
 						}
+
+						//set name for return data
+						if ($this->config['displayName'] && is_string($this->config['displayName'])) {
+							$displayName = $this->config['displayName'];
+						} else {
+							$displayName = $filename;
+						}
+
 						$this->returnData[($f - 1)] = 	array(
-							'name'         => $filename,
+							'name'         => $displayName,
+							'filename'     => $filename,
 							'path'         => $this->config['path'],
 							'url'          => $url,
 							'fileSize'     => $file['size'],

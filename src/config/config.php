@@ -42,6 +42,9 @@ return array(
 			'tw' => 120,	//thumbnail image width
 			'th' => 120,	//thumbnail image height
 		),
+
+		'displayName'            => false, //use false to use filename as display name
+		'defaultThumb'           => 'default-thumb-upload.png',
 	),
 
 	'crop' => array(
