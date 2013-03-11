@@ -500,9 +500,9 @@ class Upstream {
 				if (is_file($path.$entry)) $files[] = $entry;
 			}
 		}
-		if (IS_AJAX && isset($config['returnJson']) && $config['returnJson']) {
+		if (isset($config['returnJson']) && $config['returnJson']) {
 			return json_encode($files);
-		} else if (isset($config['return_str']) && $config['return_str']) {
+		} else if (isset($config['returnStr']) && $config['returnStr']) {
 			return implode(', ', $files);
 		} else {
 			return $files;
