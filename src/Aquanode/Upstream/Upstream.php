@@ -466,7 +466,7 @@ class Upstream {
 									  'url'        => URL::to($path.$filename),
 									  'fileSize'   => filesize($path.$filename),
 									  'fileType'   => filetype($path.$filename),
-									  'isImage'    => in_array($fileExt, array('png', 'jpg', 'jpeg', 'gif')) ? true:false,
+									  'isImage'    => static::isImage($filename),
 									  'deleteURL'  => $deleteFullURL,
 									  'deleteType' => 'DELETE',
 									  'error'      => false);
@@ -713,6 +713,12 @@ class Upstream {
 		} //end if directory can be opened
 
 		return $deletedFiles;
+	}
+
+	public static function isImage($file = '')
+	{
+		if (in_array(strtolower(File::extension($file)), array('png', 'jpg', 'jpeg', 'gif'))) return true;
+		return false;
 	}
 
 }
