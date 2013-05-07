@@ -35,7 +35,7 @@ class Upstream {
 	//function called by the form
 	public static function make($config = array())
 	{
-		return new Upstream($config);
+		return new static($config);
 	}
 
 	public function upload($config = array())
@@ -521,7 +521,7 @@ class Upstream {
 		return $filename;
 	}
 
-	public static function createDirectory($path)
+	public static function createDirectory($path, $permissions = 0777)
 	{
 		$pathArray = explode('/', $path);
 		$pathPartial = "";
@@ -532,6 +532,7 @@ class Upstream {
 				$pathPartial .= $pathArray[$p];
 				if (!is_dir($pathPartial)) {
 					mkdir($pathPartial);
+					chmod($pathPartial, sprintf('%04d', $permissions));
 					$directoriesCreated ++;
 				}
 			}
@@ -557,7 +558,7 @@ class Upstream {
 			$fileSize = filesize($file);
 
 			if ($convert) {
-				return $this->convertFileSize($fileSize);
+				return static::convertFileSize($fileSize);
 			} else {
 				return $fileSize;
 			}
@@ -663,7 +664,7 @@ class Upstream {
 		$this->allowed_types = $types;
 	}
 
-	public function dirFileLimits($directory = '', $limits = array())
+	public static function dirFileLimits($directory = '', $limits = array())
 	{
 		if (substr($directory, -1) != "/") $directory .= "/"; //add trailing slash to directory if it doesn't exist
 		$deletedFiles = array();
