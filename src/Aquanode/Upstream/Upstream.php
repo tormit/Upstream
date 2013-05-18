@@ -260,10 +260,10 @@ class Upstream {
 
 						//set thumbnail image for return data
 						if ($this->config['imgThumb']) {
-							$thumbnailUrl = URL::to(str_replace('public/', '', $this->config['path'].'thumbs/'.$filename));
-							if ($this->config['noCacheUrl']) $thumbnailUrl .= '?'.rand(1, 99999);
+							$thumbnailURL = URL::to(str_replace('public/', '', $this->config['path'].'thumbs/'.$filename));
+							if ($this->config['noCacheUrl']) $thumbnailURL .= '?'.rand(1, 99999);
 						} else {
-							$thumbnailUrl = $this->config['defaultThumb'];
+							$thumbnailURL = $this->config['defaultThumb'];
 						}
 
 						//set name for return data
@@ -281,8 +281,8 @@ class Upstream {
 							'fileSize'     => $file['size'],
 							'fileType'     => $originalFileExt,
 							'isImage'      => in_array($originalFileExt, array('png', 'jpg', 'jpeg', 'gif')) ? true:false,
-							'thumbnailUrl' => $thumbnailUrl,
-							'deleteUrl'    => '', //some of these variables are added as dummy variables to allow it to work with jquery-file-upload out of the box
+							'thumbnailURL' => $thumbnailURL,
+							'deleteURL'    => '', //some of these variables are added as dummy variables to allow it to work with jquery-file-upload out of the box
 							'deleteType'   => 'DELETE',
 							'error'        => false,
 						);
@@ -475,9 +475,9 @@ class Upstream {
 									  'deleteType' => 'DELETE',
 									  'error'      => false);
 						if ($file['isImage'] && is_file($path.'thumbs/'.$filename)) {
-							$file['thumbnailUrl'] = URL::to($path.'thumbs/'.$filename);
+							$file['thumbnailURL'] = URL::to($path.'thumbs/'.$filename);
 						} else {
-							$file['thumbnailUrl'] = "";
+							$file['thumbnailURL'] = "";
 						}
 						$result[] = $file;
 					}
