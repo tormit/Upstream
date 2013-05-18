@@ -6,7 +6,7 @@
 		Works great with jCrop and jquery-file-upload.
 
 		created by Cody Jassman / Aquanode - http://aquanode.com
-		last updated on March 10, 2013
+		last updated on May 18, 2013
 ----------------------------------------------------------------------------------------------------------*/
 
 use Illuminate\Support\Facades\Config;
@@ -74,20 +74,24 @@ class Upstream {
 				if (!empty($fileInfo)) {
 					if (is_array($fileInfo['name'])) { //array of files exists rather than just a single file; loop through them
 						for ($f=0; $f < count($fileInfo['name']); $f++) {
-							$files[] = array('name'    => trim($fileInfo['name'][$f]),
-										 	 'type'    => $fileInfo['type'][$f],
-											 'tmpName' => $fileInfo['tmp_name'][$f],
-											 'error'   => $fileInfo['error'][$f],
-											 'size'    => $fileInfo['size'][$f],
-											 'key'     => $key);
+							$files[] = array(
+								'name'    => trim($fileInfo['name'][$f]),
+								'type'    => $fileInfo['type'][$f],
+								'tmpName' => $fileInfo['tmp_name'][$f],
+								'error'   => $fileInfo['error'][$f],
+								'size'    => $fileInfo['size'][$f],
+								'key'     => $key,
+							);
 						}
 					} else {
-						$files[] = array('name'    => trim($fileInfo['name']),
-										 'type'    => $fileInfo['type'],
-										 'tmpName' => $fileInfo['tmp_name'],
-										 'error'   => $fileInfo['error'],
-										 'size'    => $fileInfo['size'],
-										 'key'     => $key);
+						$files[] = array(
+							'name'    => trim($fileInfo['name']),
+							'type'    => $fileInfo['type'],
+							'tmpName' => $fileInfo['tmp_name'],
+							'error'   => $fileInfo['error'],
+							'size'    => $fileInfo['size'],
+							'key'     => $key,
+						);
 					}
 				}
 			}
@@ -280,7 +284,7 @@ class Upstream {
 							'thumbnailUrl' => $thumbnailUrl,
 							'deleteUrl'    => '', //some of these variables are added as dummy variables to allow it to work with jquery-file-upload out of the box
 							'deleteType'   => 'DELETE',
-							'error'        => false
+							'error'        => false,
 						);
 					} else {
 						$this->returnData[($f - 1)]['error'] = 'Something went wrong. Please try again.';
@@ -606,11 +610,7 @@ class Upstream {
 			if (is_file($path.'/thumbs/'.$pathArray[$p])) unlink($path.'/thumbs/'.$pathArray[$p]);
 		}
 
-		if (IS_AJAX) {
-			return json_encode($this->returnData);
-		} else {
-			return $this->returnData;
-		}
+		return $this->returnData;
 	}
 
 	//load the files
@@ -689,7 +689,7 @@ class Upstream {
 							}
 						} //end if file extension exists (entry is not a directory)
 					}
-				} //end foreach file in directory
+				} //end while file in directory
 
 				while ($quantity > $limit) { //if there are too many files of filetype being checked delete until at limit starting with oldest files
 					$oldestFile = -1;
@@ -709,7 +709,34 @@ class Upstream {
 					}
 				} //end while quantity > limit
 				rewinddir($handle);
-			} //end foreach limits
+			} //end while limits
+		} //end if directory can be opened
+
+		return $deletedFiles;
+	}
+
+	public static function deleteDirectory($directory = '', $deleteAllContent = false)
+	{
+		if (substr($directory, -1) != "/") $directory .= "/"; //add trailing slash to directory if it doesn't exist
+		$deletedFiles = 0;
+
+		if (is_dir($directory) && $handle = opendir($directory)) {
+			while (false !== ($entry = readdir($handle))) {
+				if (!$deleteAllContent) return $deletedFiles;
+
+				if ($entry != "." && $entry != "..") {
+					if (is_file($directory.$entry)) {
+						unlink($directory.$entry);
+						$deletedFiles ++;
+					} else if (is_dir($directory.$entry)) { //delete sub-directory and all files/directorys it contains
+						$deletedFiles += static::deleteDirectory($directory.$entry, true);	
+					}
+				}
+			} //end while file in directory
+
+			//remove directory
+			rmdir($directory);
+
 		} //end if directory can be opened
 
 		return $deletedFiles;
