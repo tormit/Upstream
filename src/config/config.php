@@ -47,6 +47,14 @@ return array(
 		'defaultThumb'           => 'default-thumb-upload.png',
 	),
 
+	/*
+	|--------------------------------------------------------------------------
+	| Cropping Defaults
+	|--------------------------------------------------------------------------
+	|
+	| The default setup for cropping images. 
+	|
+	*/
 	'crop' => array(
 		'path'            => true, //set this to true to use the same path as the upload config above
 		'newPath'         => false,
@@ -66,4 +74,41 @@ return array(
 		),
 	),
 
+	/*
+	|--------------------------------------------------------------------------
+	| File Type Categories
+	|--------------------------------------------------------------------------
+	|
+	| The file type categories for allowed file types for uploading and for
+	| the file type order when getting the contents of a directory. Setting
+	| the "fileTypes" upload config variable to "images", for example, will
+	| allow the upload() method to automatically allow all image file types.
+	|
+	*/
+	'fileTypeCategories' => array(
+		'image' => array(
+			'jpg',
+			'jpeg',
+			'png',
+			'gif',
+		),
+		'vector' => array(
+			'svg',
+			'eps',
+			'ai',
+		),
+		'audio' => array(
+			'mp3',
+			'ogg',
+			'wma',
+			'wav',
+		),
+		'video' => array(
+			'mp4',
+			'avi',
+			'fla',
+			'mov',
+			'wmv',
+		),
+	),
 );

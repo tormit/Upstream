@@ -44,31 +44,14 @@ class Upstream {
 		if (!empty($config)) $this->config = array_merge($this->config, $config);
 
 		//set file types config
-		$fileTypesImg = false;
 		if ($this->config['fileTypes'] != '*') {
-			if (!is_array($this->config['fileTypes'])) {
-				if ($this->config['fileTypes'] == "image") {
-					$fileTypesImg = true;
-					$this->config['fileTypes'] = array('jpg', 'png', 'gif');
-				}
-
-				if ($this->config['fileTypes'] == "vector") {
-					$this->config['fileTypes'] = array('svg', 'ai', 'eps');
-				}
-
-				if ($this->config['fileTypes'] == "audio") {
-					$this->config['fileTypes'] = array('svg', 'ai', 'eps');
-				}
-
-				if ($this->config['fileTypes'] == "video") {
-					$this->config['fileTypes'] = array('svg', 'ai', 'eps');
-				}
+			if ($this->config['fileTypes'] == "image") {
+				$fileTypesImg = true;
+			} else {
+				$fileTypesImg = false;
 			}
 
-			if (!is_array($this->config['fileTypes'])) $this->config['fileTypes'] = explode('|', $this->config['fileTypes']); // if file types is set as a string like "jpg|gif|png", explode it into an array
-
-			//add JPEG if JPG is set as file type
-			if (is_array($this->config['fileTypes']) && in_array('jpg', $this->config['fileTypes']) && !in_array('jpeg', $this->config['fileTypes'])) $this->config['fileTypes'][] = 'jpeg';
+			$this->config['fileTypes'] = static::formatFileTypesList($this->config['fileTypes']);
 		}
 
 		//format error triggers
@@ -469,7 +452,7 @@ class Upstream {
 			if ($handle = opendir($path)) {
 				if ($config['fileTypeOrder']) {
 
-					$config['fileTypeOrder'] = static::formatFileTypeOrder($config['fileTypeOrder']);
+					$config['fileTypeOrder'] = static::formatFileTypesList($config['fileTypeOrder']);
 
 					$files = glob($path.'*.{'.implode(',', $config['fileTypeOrder']).'}', GLOB_BRACE);
 				} else {
@@ -514,7 +497,7 @@ class Upstream {
 		if (is_dir($path) && $handle = opendir($path)) {
 			if ($config['fileTypeOrder']) {
 
-				$config['fileTypeOrder'] = static::formatFileTypeOrder($config['fileTypeOrder']);
+				$config['fileTypeOrder'] = static::formatFileTypesList($config['fileTypeOrder']);
 
 				$files_list = glob($path.'*.{'.implode(',', $config['fileTypeOrder']).'}', GLOB_BRACE);
 			} else {
@@ -535,59 +518,29 @@ class Upstream {
 	}
 
 	//add file type categories
-	public static function formatFileTypeOrder($fileTypeOrder = array())
+	public static function formatFileTypesList($fileTypes = array())
 	{
-		$fileTypeCategories = array(
-			'image'  => false,
-			'vector' => false,
-			'audio'  => false,
-			'video'  => false,
-		);
-		foreach ($fileTypeOrder as $fileType) {
-			if (isset($fileTypeCategories[$fileType])) $fileTypeCategories[$fileType] = true;
-			if ($fileType == "image") {
-				$types = array('jpg', 'gif', 'png');
+		$fileTypesFormatted = array();
+		if (!is_array($fileTypes)) $fileTypes = explode('|', $fileTypes);
+
+		//create arrays of file types to remove (file type categories), and file types to add (from file type categories)
+		$fileTypeCategories = Config::get('upstream::fileTypeCategories');
+		for ($t=0; $t < count($fileTypes); $t++) {
+			$category = false;
+			foreach ($fileTypeCategories as $fileTypeCategory => $fileTypesForCategory) {
+				if ($fileTypes[$t] == $fileTypeCategory) {
+					$category = true;
+					foreach ($fileTypesForCategory as $fileType) {
+						$fileTypesFormatted[] = $fileType;
+					}
+				}
 			}
-
-			if ($fileType == "vector") {
-				$addVector = true;
-				$types = array('ai', 'eps', 'svg');
+			if (!$category) {
+				$fileTypesFormatted[] = $fileTypes[$t];
 			}
 		}
 
-		if ($fileTypeCategories['image']) {
-			unset($fileTypeOrder['image']);
-			$fileTypeOrder[] = 'jpg';
-			$fileTypeOrder[] = 'jpeg';
-			$fileTypeOrder[] = 'png';
-			$fileTypeOrder[] = 'gif';
-		}
-
-		if ($fileTypeCategories['vector']) {
-			unset($fileTypeOrder['vector']);
-			$fileTypeOrder[] = 'svg';
-			$fileTypeOrder[] = 'eps';
-			$fileTypeOrder[] = 'ai';
-		}
-
-		if ($fileTypeCategories['audio']) {
-			unset($fileTypeOrder['audio']);
-			$fileTypeOrder[] = 'mp3';
-			$fileTypeOrder[] = 'ogg';
-			$fileTypeOrder[] = 'wma';
-			$fileTypeOrder[] = 'wav';
-		}
-
-		if ($fileTypeCategories['video']) {
-			unset($fileTypeOrder['video']);
-			$fileTypeOrder[] = 'mp4';
-			$fileTypeOrder[] = 'fla';
-			$fileTypeOrder[] = 'avi';
-			$fileTypeOrder[] = 'mov';
-			$fileTypeOrder[] = 'wmv';
-		}
-
-		return $fileTypeOrder;
+		return $fileTypesFormatted;
 	}
 
 	public static function uriToFilename($uri = '')
@@ -738,26 +691,15 @@ class Upstream {
 		return array_values(array_filter(array_map(array($this, 'getFileObject'), scandir($this->getPathImgUploadFolder()))));
 	}
 
-	public function setAllowedTypes($types)
-	{
-		if (!is_array($types) && $types != '*') $types = explode('|', $types);
-		$this->allowed_types = $types;
-	}
-
 	public static function dirFileLimits($directory = '', $limits = array())
 	{
 		if (substr($directory, -1) != "/") $directory .= "/"; //add trailing slash to directory if it doesn't exist
 		$deletedFiles = array();
 
 		if (is_dir($directory) && $handle = opendir($directory)) {
-			foreach ($limits as $types=>$limit) {
+			foreach ($limits as $fileTypes => $limit) {
 
-				if ($types == "image")  $types = array('jpg', 'png', 'gif');
-				if ($types == "vector") $types = array('svg', 'ai', 'eps');
-				if ($types == "audio")  $types = array('mp3', 'ogg', 'wma', 'wav');
-				if ($types == "video")  $types = array('mp4', 'fla', 'avi', 'mov', 'wmv');
-
-				if (!is_array($types))  $types = explode('|', $types);
+				$fileTypes = static::formatFileTypesList($fileTypes);
 
 				$filesForType = array();
 				$quantity = 0;
@@ -766,7 +708,7 @@ class Upstream {
 					if (is_file($directory.$entry)) {
 						$fileExt = File::extension($entry);
 						if ($fileExt) {
-							if (in_array(strtolower($fileExt), $types) && !in_array($directory.$entry, $filesForType)) {
+							if (in_array(strtolower($fileExt), $fileTypes) && !in_array($directory.$entry, $filesForType)) {
 								$filesForType[] = $directory.$entry;
 								$quantity ++;
 							}
