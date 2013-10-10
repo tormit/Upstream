@@ -11,7 +11,8 @@ return array(
 	|
 	*/
 	'upload' => array(
-		'path'                   => 'public/uploads/',
+		'path'                   => 'uploads',
+		'fields'                 => true, //use a string like "image" if you have only one file field called "image" that you would like to process or pass an array for specific file fields
 		'createDirectory'        => false,
 		'filename'               => false,
 		'overwrite'              => false,
@@ -22,7 +23,7 @@ return array(
 		'fileTypes'              => '*',
 		'maxFileSize'            => false,
 
-		//image uploading
+		//image uploading size limits
 		'imgMinWidth'            => false,
 		'imgMinHeight'           => false,
 		'imgMaxWidth'            => false, //if max is exceeded and imgResizeMax is true, image will be resized to max instead of triggering error
@@ -30,17 +31,17 @@ return array(
 
 		//image resizing
 		'imgResize'              => false,
-		'imgResizeMax'           => false, //used in conjunction with imgMaxWidth and/or imgMaxHeight to resize only if image exceeds maximums
+		'imgResizeMax'           => false, //used in conjunction with imgMaxWidth and/or imgMaxHeight to resize only if image exceeds maximums; images that are smaller will not be upscaled
 		'imgResizeDefaultType'   => 'landscape', //if resizing but not cropping, this is the default cropping option (see Resizer bundle options)
 		'imgResizeQuality'       => 75,
 		'imgThumb'               => false,
 		'imgCrop'                => false,
 		'imgCropThumb'           => true,
 		'imgDimensions'          => array(
-			'w'  =>	480,	//image width
-			'h'  =>	480,	//image height
-			'tw' => 120,	//thumbnail image width
-			'th' => 120,	//thumbnail image height
+			'w'  =>	480, //image width
+			'h'  =>	480, //image height
+			'tw' => 120, //thumbnail image width
+			'th' => 120, //thumbnail image height
 		),
 
 		'displayName'            => false, //use false to use filename as display name
@@ -68,7 +69,7 @@ return array(
 			'w' => 120,
 			'h' => 120,
 		),
-		'imgDimensions' => array(
+		'imgDimensions'   => array(
 			'w' => 120,
 			'h' => 120,
 		),
@@ -86,7 +87,7 @@ return array(
 	|
 	*/
 	'fileTypeCategories' => array(
-		'image' => array(
+		'image'  => array(
 			'jpg',
 			'jpeg',
 			'png',
@@ -97,13 +98,13 @@ return array(
 			'eps',
 			'ai',
 		),
-		'audio' => array(
+		'audio'  => array(
 			'mp3',
 			'ogg',
 			'wma',
 			'wav',
 		),
-		'video' => array(
+		'video'  => array(
 			'mp4',
 			'avi',
 			'fla',
@@ -111,4 +112,5 @@ return array(
 			'wmv',
 		),
 	),
+
 );
