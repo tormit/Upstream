@@ -5,7 +5,7 @@
         "version_normalized": "9999999-dev",
         "source": {
             "type": "git",
-            "url": "https://github.com/julien-c/SimpleResize",
+            "url": "https://github.com/julien-c/SimpleResize.git",
             "reference": "9823a4dc618a9d3471525c5dafd5f365d70675d4"
         },
         "dist": {
@@ -42,12 +42,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/illuminate/support.git",
-            "reference": "e7649509dfa4cf5144d9c8c9890718a2dd47df89"
+            "reference": "48db89ad7bd5f6b384377abc7ad1f96a387eabd9"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/illuminate/support/zipball/e7649509dfa4cf5144d9c8c9890718a2dd47df89",
-            "reference": "e7649509dfa4cf5144d9c8c9890718a2dd47df89",
+            "url": "https://api.github.com/repos/illuminate/support/zipball/48db89ad7bd5f6b384377abc7ad1f96a387eabd9",
+            "reference": "48db89ad7bd5f6b384377abc7ad1f96a387eabd9",
             "shasum": ""
         },
         "require": {
@@ -58,11 +58,11 @@
             "patchwork/utf8": "1.1.*",
             "phpunit/phpunit": "3.7.*"
         },
-        "time": "2013-05-04 14:20:21",
+        "time": "2013-12-13 02:49:39",
         "type": "library",
         "extra": {
             "branch-alias": {
-                "dev-master": "4.0-dev"
+                "dev-master": "4.2-dev"
             }
         },
         "installation-source": "source",
@@ -75,12 +75,16 @@
             ]
         },
         "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
         "authors": [
             {
                 "name": "Taylor Otwell",
-                "email": "taylorotwell@gmail.com"
+                "email": "taylorotwell@gmail.com",
+                "homepage": "https://github.com/taylorotwell",
+                "role": "Developer"
             }
-        ],
-        "description": "Various utilities and support functions."
+        ]
     }
 ]
