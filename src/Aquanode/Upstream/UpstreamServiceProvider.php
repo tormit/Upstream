@@ -28,7 +28,9 @@ class UpstreamServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		//
+		$this->app['upstream'] = $this->app->share(function($app) {
+			return new Upstream();
+		});
 	}
 
 	/**
