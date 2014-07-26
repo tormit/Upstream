@@ -6,6 +6,7 @@
 		other file management functions. Works great with jCrop and jquery-file-upload.
 
 		created by Cody Jassman / Aquanode - http://aquanode.com
+		version 0.4.0
 		last updated on July 25, 2014
 ----------------------------------------------------------------------------------------------------------*/
 
