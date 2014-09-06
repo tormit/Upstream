@@ -6,8 +6,8 @@
 		other file management functions. Works great with jCrop and jquery-file-upload.
 
 		created by Cody Jassman / Aquanode - http://aquanode.com
-		version 0.4.0
-		last updated on July 25, 2014
+		version 0.4.1
+		last updated on September 6, 2014
 ----------------------------------------------------------------------------------------------------------*/
 
 use Illuminate\Support\Facades\Config;
@@ -67,12 +67,14 @@ class Upstream {
 		}
 
 		//format error triggers
-		if ($this->config['maxFileSize'])  $this->config['maxFileSize'] = strtoupper(str_replace(' ', '', $this->config['maxFileSize']));
-		if ($this->config['imgMinWidth'])  $this->config['imgMinWidth'] = str_replace('px', '', strtolower($this->config['imgMinWidth']));
+		if ($this->config['maxFileSize'])  $this->config['maxFileSize']  = strtoupper(str_replace(' ', '', $this->config['maxFileSize']));
+		if ($this->config['imgMinWidth'])  $this->config['imgMinWidth']  = str_replace('px', '', strtolower($this->config['imgMinWidth']));
 		if ($this->config['imgMinHeight']) $this->config['imgMinHeight'] = str_replace('px', '', strtolower($this->config['imgMinHeight']));
 
 		$this->returnData = array();
-		$this->returnData[] = array('error'=> 'Something went wrong. Please try again.');
+		$this->returnData[] = array(
+			'error' => 'Something went wrong. Please try again.'
+		);
 
 		if ($_FILES) {
 			if (substr($this->config['path'], -1) != "/") $this->config['path'] .= "/"; //add trailing slash to path if it doesn't exist
@@ -308,10 +310,10 @@ class Upstream {
 
 						//set thumbnail image for return data
 						if ($this->config['imgThumb']) {
-							$thumbnailURL = URL::to(str_replace('public/', '', $this->config['path'].'thumbs/'.$filename));
+							$thumbnailUrl = URL::to(str_replace('public/', '', $this->config['path'].'thumbnails/'.$filename));
 							if ($this->config['noCacheUrl']) $thumbnailURL .= '?'.rand(1, 99999);
 						} else {
-							$thumbnailURL = $this->config['defaultThumb'];
+							$thumbnailUrl = $this->config['defaultThumb'];
 						}
 
 						//set name for return data
@@ -321,18 +323,47 @@ class Upstream {
 							$displayName = $filename;
 						}
 
-						$this->returnData[($f - 1)] = 	array(
-							'name'         => $displayName,
-							'filename'     => $filename,
-							'path'         => $this->config['path'],
-							'url'          => $url,
-							'fileSize'     => $file['size'],
-							'fileType'     => $originalFileExt,
-							'isImage'      => in_array($originalFileExt, array('png', 'jpg', 'jpeg', 'gif')) ? true:false,
-							'thumbnailURL' => $thumbnailURL,
-							'deleteURL'    => '', //some of these variables are added as dummy variables to allow it to work with jquery-file-upload out of the box
-							'deleteType'   => 'DELETE',
-							'error'        => false,
+						$extension       = File::extension($filename);
+						$basename        = str_replace('.'.$extension, '', $filename);
+						$isImage         = in_array($originalFileExt, array('png', 'jpg', 'jpeg', 'gif'));
+						$imgDimensions   = array(
+							'w'  => null,
+							'h'  => null,
+							'tw' => null,
+							'th' => null,
+						);
+
+						if ($isImage) {
+							$size = getimagesize($this->config['path'].'/'.$filename);
+							if (!empty($size)) {
+								$imgDimensions['w'] = $size[0];
+								$imgDimensions['h'] = $size[1];
+
+								if (File::exists($this->config['path'].'thumbnails/'.$filename)) {
+									$thumbnailSize = getimagesize($this->config['path'].'thumbnails/'.$filename);
+									if (!empty($thumbnailSize)) {
+										$imgDimensions['tw'] = $thumbnailSize[0];
+										$imgDimensions['th'] = $thumbnailSize[1];
+									}
+								}
+							}
+						}
+
+						$this->returnData[($f - 1)] = array(
+							'name'          => $displayName,
+							'filename'      => $filename,
+							'basename'      => $basename,
+							'extension'     => $extension,
+							'path'          => $this->config['path'],
+							'url'           => $url,
+							'fileSize'      => $file['size'],
+							'fileType'      => $originalFileExt,
+							'isImage'       => $isImage,
+							'thumbnailUrl'  => $thumbnailUrl,
+							'imgDimensions' => $imgDimensions,
+							'deleteUrl'     => '', //some of these variables are added as dummy variables to allow it to work with jquery-file-upload out of the box
+							'deleteType'    => 'DELETE',
+							'error'         => false,
 						);
 					} else {
 						$this->returnData[($f - 1)]['error'] = 'Something went wrong. Please try again.';
@@ -370,7 +401,7 @@ class Upstream {
 	{
 		$config = array_merge(Config::get('upstream::crop'), $config);
 
-		$returnData = array('error'=> 'Something went wrong. Please try again.');
+		$returnData = array('error' => 'Something went wrong. Please try again.');
 
 		$path = $config['path'];
 
@@ -536,8 +567,11 @@ class Upstream {
 			$path = $configDefault['path'];
 		}
 
-		if (!isset($config['deleteURL']))     $config['deleteURL'] = "";
-		if (!isset($config['fileTypeOrder'])) $config['fileTypeOrder'] = false;
+		if (!isset($config['deleteUrl']))
+			$config['deleteUrl'] = "";
+
+		if (!isset($config['fileTypeOrder']))
+			$config['fileTypeOrder'] = false;
 
 		$result = array();
 		if (is_dir($path)) {
@@ -557,8 +591,8 @@ class Upstream {
 						$filename = $entry;
 						$fileExt = File::extension($filename);
 
-						$deleteFullURL = $config['deleteURL'];
-						if ($config['deleteURL'] != "") $deleteFullURL .= "/".str_replace(' ', '__', $filename);
+						$deleteFullUrl = $config['deleteURL'];
+						if ($config['deleteUrl'] != "") $deleteFullUrl .= "/".str_replace(' ', '__', $filename);
 
 						$file = array(
 							'name'       => $filename,
@@ -566,15 +600,15 @@ class Upstream {
 							'fileSize'   => filesize($path.$filename),
 							'fileType'   => filetype($path.$filename),
 							'isImage'    => $this->isImage($filename),
-							'deleteURL'  => $deleteFullURL,
+							'deleteUrl'  => $deleteFullUrl,
 							'deleteType' => 'DELETE',
 							'error'      => false,
 						);
 
-						if ($file['isImage'] && is_file($path.'thumbs/'.$filename))
-							$file['thumbnailURL'] = URL::to($path.'thumbs/'.$filename);
+						if ($file['isImage'] && is_file($path.'thumbnails/'.$filename))
+							$file['thumbnailUrl'] = URL::to($path.'thumbnails/'.$filename);
 						else
-							$file['thumbnailURL'] = "";
+							$file['thumbnailUrl'] = "";
 
 						$result[] = $file;
 					}
@@ -811,8 +845,8 @@ class Upstream {
 				$path .= $pathArray[$p];
 			}
 
-			if (is_file($path.'/thumbs/'.$pathArray[$p]))
-				unlink($path.'/thumbs/'.$pathArray[$p]);
+			if (is_file($path.'/thumbnails/'.$pathArray[$p]))
+				unlink($path.'/thumbnails/'.$pathArray[$p]);
 		}
 
 		return $success;
@@ -917,8 +951,7 @@ class Upstream {
 	 */
 	public function isImage($file = '')
 	{
-		if (in_array(strtolower(File::extension($file)), array('png', 'jpg', 'jpeg', 'gif', 'svg'))) return true;
-		return false;
+		return in_array(strtolower(File::extension($file)), array('png', 'jpg', 'jpeg', 'gif', 'svg'));
 	}
 
 }
