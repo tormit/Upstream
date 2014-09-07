@@ -7,7 +7,7 @@
 
 		created by Cody Jassman / Aquanode - http://aquanode.com
 		version 0.4.1
-		last updated on September 6, 2014
+		last updated on September 7, 2014
 ----------------------------------------------------------------------------------------------------------*/
 
 use Illuminate\Support\Facades\Config;
@@ -311,7 +311,7 @@ class Upstream {
 						//set thumbnail image for return data
 						if ($this->config['imgThumb']) {
 							$thumbnailUrl = URL::to(str_replace('public/', '', $this->config['path'].'thumbnails/'.$filename));
-							if ($this->config['noCacheUrl']) $thumbnailURL .= '?'.rand(1, 99999);
+							if ($this->config['noCacheUrl']) $thumbnailUrl .= '?'.rand(1, 99999);
 						} else {
 							$thumbnailUrl = $this->config['defaultThumb'];
 						}
