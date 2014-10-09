@@ -13,6 +13,7 @@ return array(
 	'upload' => array(
 		'path'                   => 'uploads',
 		'fields'                 => true, //use a string like "image" if you have only one file field called "image" that you would like to process or pass an array for specific file fields
+		'fieldThumb'             => 'thumbnail_image',
 		'createDirectory'        => false,
 		'filename'               => false,
 		'overwrite'              => false,
@@ -24,28 +25,31 @@ return array(
 		'maxFileSize'            => false,
 
 		//image uploading size limits
-		'imgMinWidth'            => false,
-		'imgMinHeight'           => false,
-		'imgMaxWidth'            => false, //if max is exceeded and imgResizeMax is true, image will be resized to max instead of triggering error
-		'imgMaxHeight'           => false,
+		'imageMinWidth'          => false,
+		'imageMinHeight'         => false,
+		'imageMaxWidth'          => false, //if max is exceeded and imgResizeMax is true, image will be resized to max instead of triggering error
+		'imageMaxHeight'         => false,
 
 		//image resizing
-		'imgResize'              => false,
-		'imgResizeMax'           => false, //used in conjunction with imgMaxWidth and/or imgMaxHeight to resize only if image exceeds maximums; images that are smaller will not be upscaled
-		'imgResizeDefaultType'   => 'landscape', //if resizing but not cropping, this is the default cropping option (see Resizer bundle options)
-		'imgResizeQuality'       => 75,
-		'imgThumb'               => false,
-		'imgCrop'                => false,
-		'imgCropThumb'           => true,
-		'imgDimensions'          => array(
-			'w'  =>	480, //image width
-			'h'  =>	480, //image height
-			'tw' => 120, //thumbnail image width
-			'th' => 120, //thumbnail image height
+		'imageResize'            => false,
+		'imageResizeMax'         => false, //used in conjunction with imgMaxWidth and/or imgMaxHeight to resize only if image exceeds maximums; images that are smaller will not be upscaled
+		'imageResizeDefaultType' => 'landscape', //if resizing but not cropping, this is the default cropping option (see Resizer bundle options)
+		'imageResizeQuality'     => 75,
+		'imageThumb'             => false,
+		'imageCrop'              => false,
+		'imageCropThumb'         => true,
+		'imageDimensions'        => array(
+			'w'  =>	1024, //image width
+			'h'  =>	768,  //image height
+			'tw' => 180,  //thumbnail image width
+			'th' => 180,  //thumbnail image height
 		),
 
 		'displayName'            => false, //use false to use filename as display name
 		'defaultThumb'           => 'default-thumb-upload.png',
+
+		'returnSingleResult'     => false,
+		'fieldNameAsFileIndex'   => true,
 	),
 
 	/*
@@ -66,12 +70,12 @@ return array(
 		'cropPosition'    => array(
 			'x' => 0,
 			'y' => 0,
-			'w' => 120,
-			'h' => 120,
+			'w' => 180,
+			'h' => 180,
 		),
-		'imgDimensions'   => array(
-			'w' => 120,
-			'h' => 120,
+		'imageDimensions' => array(
+			'w' => 180,
+			'h' => 180,
 		),
 	),
 

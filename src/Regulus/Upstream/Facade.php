@@ -1,4 +1,4 @@
-<?php namespace Aquanode\Upstream;
+<?php namespace Regulus\Upstream;
 
 class Facade extends \Illuminate\Support\Facades\Facade {
 

@@ -10,19 +10,19 @@ A simple composer package that assists in file uploads and image resizing/croppi
 <a name="installation"></a>
 ## Installation
 
-To install Upstream, make sure "aquanode/upstream" has been added to Laravel 4's `composer.json` file.
+To install Upstream, make sure `regulus/upstream` has been added to Laravel 4's `composer.json` file.
 
 	"require": {
-		"aquanode/upstream": "dev-master"
+		"regulus/upstream": "dev-master"
 	},
 
 Then run `php composer.phar update` from the command line. Composer will install the Upstream package. Now, all you have to do is register the service provider and set up Upstream's alias in `app/config/app.php`. Add this to the `providers` array:
 
-	'Aquanode\Upstream\UpstreamServiceProvider',
+	'Regulus\Upstream\UpstreamServiceProvider',
 
 And add this to the `aliases` array:
 
-	'Upstream' => 'Aquanode\Upstream\Facade',
+	'Upstream' => 'Regulus\Upstream\Facade',
 
 <a name="uploading-files"></a>
 ## Uploading Files
@@ -46,21 +46,21 @@ And add this to the `aliases` array:
 ## Resizing Images and Creating Thumbnails
 
 	$config = array(
-		'path'             => 'uploads/images',
-		'fields'           => 'file',
-		'filename'         => 'temp',
-		'fileTypes'        => 'images',
-		'createDirectory'  => true,
-		'overwrite'        => true,
-		'maxFileSize'      => '5MB',
-		'imgResize'        => true,
-		'imgResizeQuality' => 60,
-		'imgCrop'          => true,
-		'imgDimensions'    => [
+		'path'               => 'uploads/images',
+		'fields'             => 'file',
+		'filename'           => 'temp',
+		'fileTypes'          => 'images',
+		'createDirectory'    => true,
+		'overwrite'          => true,
+		'maxFileSize'        => '5MB',
+		'imageResize'        => true,
+		'imageResizeQuality' => 60,
+		'imageCrop'          => true,
+		'imageDimensions'    => [
 			'w'  => 720, //image width
 			'h'  => 360, //image height
-			'tw' => 120, //thumbnail image width
-			'th' => 120, //thumbnail image height
+			'tw' => 180, //thumbnail image width
+			'th' => 180, //thumbnail image height
 		],
 	);
 
