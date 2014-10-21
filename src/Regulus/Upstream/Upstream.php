@@ -408,9 +408,9 @@ class Upstream {
 				$file['imageDimensions']['w'] = $size[0];
 				$file['imageDimensions']['h'] = $size[1];
 
-				if (File::exists($file['path'].'/'.$file['newFilename']))
+				if (File::exists($file['path'].'/thumbnails/'.$file['newFilename']))
 				{
-					$thumbnailSize = getimagesize($file['path'].'/'.$file['newFilename']);
+					$thumbnailSize = getimagesize($file['path'].'/thumbnails/'.$file['newFilename']);
 					if (!empty($thumbnailSize)) {
 						$file['imageDimensions']['tw'] = $thumbnailSize[0];
 						$file['imageDimensions']['th'] = $thumbnailSize[1];
@@ -1103,7 +1103,7 @@ class Upstream {
 	 */
 	public function isRasterImage($file = '')
 	{
-		return in_array(strtolower(File::extension($file)), array('png', 'jpg', 'jpeg', 'gif'));
+		return in_array(strtolower(File::extension($file)), $this->imageExtensions);
 	}
 
 }
