@@ -306,6 +306,8 @@ class Upstream {
 								if ($this->config['imageThumb'])
 									$this->createThumbnailImage($file);
 							}
+
+							$file = $this->addImageDimensionsData($file);
 						}
 
 						if ($fileTransfered) {
@@ -401,6 +403,33 @@ class Upstream {
 			$file['path'] .= 'thumbnails';
 
 		//add image dimensions
+		$file = $this->addImageDimensionsData($file);
+
+		//set URL
+		$file['url'] = str_replace('//', '/', URL::to($file['path'].'/'.$file['newFilename']));
+		if ($this->config['noCacheUrl']) $file['url'] .= '?'.rand(1, 99999);
+
+		//set thumbnail image URL
+		if ($this->config['imageThumb'] && $file['isImage']) {
+			$file['thumbnailUrl'] = URL::to($this->config['path'].'thumbnails/'.$file['newFilename']);
+
+			if ($this->config['noCacheUrl'])
+				$file['thumbnailUrl'] .= '?'.rand(1, 99999);
+		} else {
+			$file['thumbnailUrl'] = $this->config['defaultThumb'];
+		}
+
+		return $file;
+	}
+
+	/**
+	 * Add image dimensions data to a file array.
+	 *
+	 * @param  array    $file
+	 * @return array
+	 */
+	public function addImageDimensionsData($file)
+	{
 		if ($file['isImage'] && File::exists($this->config['path'].'/'.$file['newFilename']))
 		{
 			$size = getimagesize($this->config['path'].'/'.$file['newFilename']);
@@ -417,20 +446,6 @@ class Upstream {
 					}
 				}
 			}
-		}
-
-		//set URL
-		$file['url'] = str_replace('//', '/', URL::to($file['path'].'/'.$file['newFilename']));
-		if ($this->config['noCacheUrl']) $file['url'] .= '?'.rand(1, 99999);
-
-		//set thumbnail image URL
-		if ($this->config['imageThumb'] && $file['isImage']) {
-			$file['thumbnailUrl'] = URL::to($this->config['path'].'thumbnails/'.$file['newFilename']);
-
-			if ($this->config['noCacheUrl'])
-				$file['thumbnailUrl'] .= '?'.rand(1, 99999);
-		} else {
-			$file['thumbnailUrl'] = $this->config['defaultThumb'];
 		}
 
 		return $file;
