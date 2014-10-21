@@ -5,8 +5,8 @@
 		A simple composer package that assists in file uploads and image resizing/cropping.
 
 		created by Cody Jassman
-		version 0.4.3
-		last updated on October 1, 2014
+		version 0.4.4
+		last updated on October 20, 2014
 ----------------------------------------------------------------------------------------------------------*/
 
 use Illuminate\Support\Facades\Config;
@@ -28,7 +28,7 @@ class Upstream {
 	 * @param  array    $id
 	 * @return array
 	 */
-	public function __construct($config = array())
+	public function __construct($config = [])
 	{
 		//default settings
 		$this->config = array_merge(Config::get('upstream::upload'), $config);
@@ -40,7 +40,7 @@ class Upstream {
 	 * @param  array    $config
 	 * @return Upstream
 	 */
-	public function make($config = array())
+	public function make($config = [])
 	{
 		return new static($config);
 	}
@@ -51,7 +51,7 @@ class Upstream {
 	 * @param  array    $config
 	 * @return array
 	 */
-	public function upload($config = array())
+	public function upload($config = [])
 	{
 		//modify upload settings through a single config parameter
 		if (!empty($config)) $this->config = array_merge($this->config, $config);
@@ -79,7 +79,8 @@ class Upstream {
 			'files'     => array(),
 		);
 
-		if ($_FILES) {
+		if ($_FILES)
+		{
 			if (substr($this->config['path'], -1) != "/") $this->config['path'] .= "/"; //add trailing slash to path if it doesn't exist
 			$originalFilename = ""; $originalFileExt = "";
 
@@ -143,9 +144,8 @@ class Upstream {
 
 					//get image dimensions if file is an image
 					$dimensions = array();
-					if (in_array($originalFileExt, array('jpg', 'jpeg', 'gif', 'png'))) {
+					if (in_array($originalFileExt, $this->imageExtensions))
 						$dimensions = $this->imageSize($file['tmpName']);
-					}
 
 					//check for errors
 					$error           = false;
@@ -254,10 +254,12 @@ class Upstream {
 						//upload file to selected directory
 						$fileTransfered = move_uploaded_file($file['tmpName'], $this->config['path'].$file['newFilename']);
 
+						//resize image if necessary
 						if ($fileTransfered) {
-							//resize image if necessary
-							if (in_array($originalFileExt, $this->imageExtensions)) {
-								if ($this->config['imageResize'] || ($this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded)))
+							if (in_array($file['extension'], $this->imageExtensions))
+							{
+								if ($this->config['imageResize']
+								|| ($this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded)))
 								{
 									//configure resized image dimensions
 									$resizeType = $this->config['imageResizeDefaultType'];
@@ -265,7 +267,8 @@ class Upstream {
 									if ($this->config['imageCrop'])
 										$resizeType = "crop";
 
-									if ($this->config['imageResize']) {
+									if ($this->config['imageResize'])
+									{
 										$resizeDimensions = array(
 											'w' => $this->config['imageDimensions']['w'],
 											'h' => $this->config['imageDimensions']['h'],
@@ -297,11 +300,11 @@ class Upstream {
 									$resize = new Resize($this->config['path'].$file['newFilename']);
 									$resize->resizeImage($resizeDimensions['w'], $resizeDimensions['h'], $resizeType);
 									$resize->saveImage($this->config['path'].$file['newFilename'], $this->config['imageResizeQuality']);
-
-									//create thumbnail image if necessary
-									if ($this->config['imageThumb'])
-										$this->createThumbnailImage($file);
 								}
+
+								//create thumbnail image if necessary
+								if ($this->config['imageThumb'])
+									$this->createThumbnailImage($file);
 							}
 						}
 
@@ -417,7 +420,7 @@ class Upstream {
 		}
 
 		//set URL
-		$file['url'] = URL::to($file['path'].'/'.$file['newFilename']);
+		$file['url'] = str_replace('//', '/', URL::to($file['path'].'/'.$file['newFilename']));
 		if ($this->config['noCacheUrl']) $file['url'] .= '?'.rand(1, 99999);
 
 		//set thumbnail image URL
@@ -535,7 +538,7 @@ class Upstream {
 	 * @param  array    $config
 	 * @return array
 	 */
-	public function cropImage($config = array())
+	public function cropImage($config = [])
 	{
 		$config = array_merge(Config::get('upstream::crop'), $config);
 
@@ -553,7 +556,7 @@ class Upstream {
 		}
 
 		//error check 2: file is not an image
-		if (!in_array($originalFileExt, array('jpg', 'jpeg', 'gif', 'png'))) {
+		if (!in_array($originalFileExt, $this->imageExtensions)) {
 			$returnData['error'] = 'The file you specified was not an image ('.$originalFilename.').';
 			return $returnData;
 		}
@@ -971,7 +974,7 @@ class Upstream {
 		$fileExt = File::extension($file);
 
 		//delete thumbnail image if it exists
-		if (in_array($fileExt, array('jpg', 'jpeg', 'png', 'gif'))) {
+		if (in_array($fileExt, $this->imageExtensions)) {
 			$pathArray = explode('/', $file);
 			$path      = "";
 			$last      = count($pathArray) - 1;
