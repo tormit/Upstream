@@ -6,7 +6,7 @@
 
 		created by Cody Jassman
 		version 0.4.4
-		last updated on October 20, 2014
+		last updated on November 26, 2014
 ----------------------------------------------------------------------------------------------------------*/
 
 use Illuminate\Support\Facades\Config;

@@ -13,7 +13,7 @@ A simple composer package that assists in file uploads and image resizing/croppi
 To install Upstream, make sure `regulus/upstream` has been added to Laravel 4's `composer.json` file.
 
 	"require": {
-		"regulus/upstream": "dev-master"
+		"regulus/upstream": "0.4.*"
 	},
 
 Then run `php composer.phar update` from the command line. Composer will install the Upstream package. Now, all you have to do is register the service provider and set up Upstream's alias in `app/config/app.php`. Add this to the `providers` array:
