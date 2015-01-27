@@ -5,8 +5,8 @@
 		A simple composer package that assists in file uploads and image resizing/cropping.
 
 		created by Cody Jassman
-		version 0.4.4
-		last updated on November 26, 2014
+		version 0.4.5
+		last updated on January 7, 2015
 ----------------------------------------------------------------------------------------------------------*/
 
 use Illuminate\Support\Facades\Config;
@@ -54,15 +54,13 @@ class Upstream {
 	public function upload($config = [])
 	{
 		//modify upload settings through a single config parameter
-		if (!empty($config)) $this->config = array_merge($this->config, $config);
+		if (!empty($config))
+			$this->config = array_merge($this->config, $config);
 
 		//set file types config
-		if ($this->config['fileTypes'] != '*') {
-			if ($this->config['fileTypes'] == "image" || $this->config['fileTypes'] == "images") {
-				$fileTypesImg = true;
-			} else {
-				$fileTypesImg = false;
-			}
+		if ($this->config['fileTypes'] != '*')
+		{
+			$fileTypesImage = $this->config['fileTypes'] == "image" || $this->config['fileTypes'] == "images";
 
 			$this->config['fileTypes'] = $this->formatFileTypesList($this->config['fileTypes']);
 		}
@@ -72,31 +70,32 @@ class Upstream {
 		if ($this->config['imageMinWidth'])  $this->config['imageMinWidth']  = str_replace('px', '', strtolower($this->config['imageMinWidth']));
 		if ($this->config['imageMinHeight']) $this->config['imageMinHeight'] = str_replace('px', '', strtolower($this->config['imageMinHeight']));
 
-		$this->returnData = array(
+		$this->returnData = [
 			'error'     => true,
 			'uploaded'  => 0,
 			'attempted' => 0,
-			'files'     => array(),
-		);
+			'files'     => [],
+		];
 
 		if ($_FILES)
 		{
-			if (substr($this->config['path'], -1) != "/") $this->config['path'] .= "/"; //add trailing slash to path if it doesn't exist
-			$originalFilename = ""; $originalFileExt = "";
+			//add trailing slash to path if it doesn't exist
+			if (substr($this->config['path'], -1) != "/")
+				$this->config['path'] .= "/";
 
 			//create files array
-			$this->files = array();
+			$this->files = [];
+
 			foreach ($_FILES as $field => $filesInfo) {
 				if (!empty($filesInfo))
 				{
 					//check if field is set to be uploaded in "fields" configuration
 					if ((is_string($this->config['fields']) && $this->config['fields'] == $field)
 					|| (is_array($this->config['fields']) && in_array($field, $this->config['fields']))
-					|| (is_bool($this->config['fields']) && $this->config['fields'])) {
+					|| (is_bool($this->config['fields']) && $this->config['fields']))
 						$uploadFile = true;
-					} else {
+					else
 						$uploadFile = false;
-					}
 
 					if ($uploadFile && isset($filesInfo['name']))
 					{
@@ -143,8 +142,8 @@ class Upstream {
 					if ($this->config['createDirectory'] && !is_dir($this->config['path'])) $this->createDirectory($this->config['path']);
 
 					//get image dimensions if file is an image
-					$dimensions = array();
-					if (in_array($originalFileExt, $this->imageExtensions))
+					$dimensions = [];
+					if (in_array($file['extension'], $this->imageExtensions))
 						$dimensions = $this->imageSize($file['tmpName']);
 
 					//check for errors
@@ -155,7 +154,8 @@ class Upstream {
 						$attemptedUpload = true;
 
 					//error check 1: file exists and overwrite not set
-					if (is_file($this->config['path'].$file['newFilename'])) {
+					if (is_file($this->config['path'].$file['newFilename']))
+					{
 						if ($this->config['overwrite']) //delete existing file if it exists and overwrite is set
 							unlink($this->config['path'].$file['newFilename']);
 						else //file exists but overwrite is not set; do not upload
@@ -163,16 +163,17 @@ class Upstream {
 					}
 
 					//error check 2: file type
-					if (!$error && $this->config['fileTypes'] != '*' && is_array($this->config['fileTypes'])) {
+					if (!$error && $this->config['fileTypes'] != '*' && is_array($this->config['fileTypes']))
+					{
 						if ($file['name'] != "") {
-							if (!in_array($originalFileExt, $this->config['fileTypes'])) {
-								if ($fileTypesImg)
+							if (!in_array($file['extension'], $this->config['fileTypes'])) {
+								if ($fileTypesImage)
 									$error = 'You must upload an image file.';
 								else
 									$error = 'You must upload a file in one of the following formats: '.implode(', ', $this->config['fileTypes']).'. ('.$file['name'].')';
 							}
 						} else {
-							if ($fileTypesImg)
+							if ($fileTypesImage)
 								$error = 'You must upload an image.';
 							else
 								$error = 'You must upload a file.';
@@ -180,39 +181,37 @@ class Upstream {
 					}
 
 					//error check 3: maximum file size
-					if (!$error && $this->config['maxFileSize']) {
+					if (!$error && $this->config['maxFileSize'])
+					{
 						$maxFileSize = $this->config['maxFileSize'];
 
 						if (substr($this->config['maxFileSize'], -2) == "KB") {
-							$maxFileSize_bytes = str_replace('KB', '', $this->config['maxFileSize']) * 1024;
+							$maxFileSizeBytes = str_replace('KB', '', $this->config['maxFileSize']) * 1024;
 						} else if (substr($this->config['maxFileSize'], -2) == "MB") {
-							$maxFileSize_bytes = str_replace('MB', '', $this->config['maxFileSize']) * 1024 * 1024;
+							$maxFileSizeBytes = str_replace('MB', '', $this->config['maxFileSize']) * 1024 * 1024;
 						} else {
-							$maxFileSize_bytes = str_replace('B', '', $this->config['maxFileSize']);
-							$maxFileSize = $this->config['maxFileSize'].'B';
+							$maxFileSizeBytes = str_replace('B', '', $this->config['maxFileSize']);
+							$maxFileSize      = $this->config['maxFileSize'].'B';
 						}
 
-						if ($file['size'] > $maxFileSize_bytes) {
+						if ($file['size'] > $maxFileSizeBytes)
 							$error = 'Your file must not exceed '.$maxFileSize.'.';
-						}
 					}
 
 					//error check 4: minimum image dimensions
-					if (!$error && in_array($originalFileExt, $this->imageExtensions) && !empty($dimensions) && ($this->config['imageMinWidth'] || $this->config['imageMinHeight'])) {
-						$errorWidth  = false;
-						$errorHeight = false;
+					if (!$error && in_array($file['extension'], $this->imageExtensions) && !empty($dimensions) && ($this->config['imageMinWidth'] || $this->config['imageMinHeight']))
+					{
+						$errorWidth  = $this->config['imageMinWidth']  && $dimensions['w'] < $this->config['imageMinWidth'];
+						$errorHeight = $this->config['imageMinHeight'] && $dimensions['h'] < $this->config['imageMinHeight'];
 
-						if ($this->config['imageMinWidth'] && $dimensions['w'] < $this->config['imageMinWidth'])   $errorWidth = true;
-						if ($this->config['imageMinHeight'] && $dimensions['h'] < $this->config['imageMinHeight']) $errorHeight = true;
-
-						if ($errorWidth || $errorHeight) {
-							if ($this->config['imageMinWidth'] && $this->config['imageMinHeight']) {
+						if ($errorWidth || $errorHeight)
+						{
+							if ($this->config['imageMinWidth'] && $this->config['imageMinHeight'])
 								$error = 'Your image must be at least '.$this->config['imageMinWidth'].' x '.$this->config['imageMinHeight'].'. ';
-							} else if ($this->config['imageMinWidth']) {
+							elseif ($this->config['imageMinWidth'])
 								$error = 'Your image must be at least '.$this->config['imageMinWidth'].' pixels in width.';
-							} else if ($this->config['imageMinHeight']) {
+							elseif ($this->config['imageMinHeight'])
 								$error = 'Your image must be at least '.$this->config['imageMinHeight'].' pixels in height.';
-							}
 
 							$error .= 'Your uploaded image dimensions were '.$dimensions['w'].' x '.$dimensions['h'].'.';
 						}
@@ -222,7 +221,7 @@ class Upstream {
 					$maxWidthExceeded  = false;
 					$maxHeightExceeded = false;
 
-					if (!$error && in_array($originalFileExt, $this->imageExtensions) && !empty($dimensions)
+					if (!$error && in_array($file['extension'], $this->imageExtensions) && !empty($dimensions)
 					&& ($this->config['imageMaxWidth'] || $this->config['imageMaxHeight']))
 					{
 						if ($this->config['imageMaxWidth'] && $dimensions['w'] > $this->config['imageMaxWidth'])
@@ -231,14 +230,14 @@ class Upstream {
 						if ($this->config['imageMaxHeight'] && $dimensions['h'] > $this->config['imageMaxHeight'])
 							$maxHeightExceeded = true;
 
-						if (!$this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded)) {
-							if ($this->config['imageMaxWidth'] && $this->config['imageMaxHeight']) {
+						if (!$this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded))
+						{
+							if ($this->config['imageMaxWidth'] && $this->config['imageMaxHeight'])
 								$error = 'Your image must be '.$this->config['imageMaxWidth'].' x '.$this->config['imageMaxHeight'].' or less. ';
-							} else if ($this->config['imageMaxWidth']) {
+							elseif ($this->config['imageMaxWidth'])
 								$error = 'Your image must be '.$this->config['imageMaxWidth'].' pixels in width or less.';
-							} else if ($this->config['imageMaxHeight']) {
+							elseif ($this->config['imageMaxHeight'])
 								$error = 'Your image must be '.$this->config['imageMaxHeight'].' pixels in height or less.';
-							}
 
 							$error .= 'Your uploaded image dimensions were '.$dimensions['w'].' x '.$dimensions['h'].'.';
 						}
@@ -247,7 +246,7 @@ class Upstream {
 					if ($this->config['fieldNameAsFileIndex'])
 						$fileIndex = $file['field'];
 					else
-						$fileIndex = ($f - 1);
+						$fileIndex = $f - 1;
 
 					if (!$error)
 					{
@@ -269,28 +268,28 @@ class Upstream {
 
 									if ($this->config['imageResize'])
 									{
-										$resizeDimensions = array(
+										$resizeDimensions = [
 											'w' => $this->config['imageDimensions']['w'],
 											'h' => $this->config['imageDimensions']['h'],
-										);
+										];
 									} else {
 										if ($maxWidthExceeded && $maxHeightExceeded) {
-											$resizeDimensions = array(
+											$resizeDimensions = [
 												'w' => $this->config['imageMaxWidth'],
 												'h' => $this->config['imageMaxHeight'],
-											);
+											];
 										} else if ($maxWidthExceeded) {
-											$resizeDimensions = array(
+											$resizeDimensions = [
 												'w' => $this->config['imageMaxWidth'],
 												'h' => false,
-											);
+											];
 
 											$resizeType = 'landscape';
 										} else if ($maxHeightExceeded) {
-											$resizeDimensions = array(
+											$resizeDimensions = [
 												'w' => false,
 												'h' => $this->config['imageMaxHeight'],
-											);
+											];
 
 											$resizeType = 'portrait';
 										}
@@ -331,7 +330,8 @@ class Upstream {
 			} //end foreach files
 
 			//create thumbnail image if necessary (from thumbnail image field)
-			if ($this->config['imageThumb'] && isset($this->files[$this->config['fieldThumb']])) {
+			if ($this->config['imageThumb'] && isset($this->files[$this->config['fieldThumb']]))
+			{
 				$this->createThumbnailImage();
 
 				$this->returnData['attempted'] ++;
@@ -406,17 +406,18 @@ class Upstream {
 		$file = $this->addImageDimensionsData($file);
 
 		//set URL
-		$file['url'] = str_replace('//', '/', URL::to($file['path'].'/'.$file['newFilename']));
-		if ($this->config['noCacheUrl']) $file['url'] .= '?'.rand(1, 99999);
+		$file['url'] = URL::to(str_replace('//', '/', $file['path'].'/'.$file['newFilename']));
+		if ($this->config['noCacheUrl'])
+			$file['url'] .= '?'.rand(1, 99999);
 
 		//set thumbnail image URL
-		if ($this->config['imageThumb'] && $file['isImage']) {
-			$file['thumbnailUrl'] = URL::to($this->config['path'].'thumbnails/'.$file['newFilename']);
-
-			if ($this->config['noCacheUrl'])
-				$file['thumbnailUrl'] .= '?'.rand(1, 99999);
-		} else {
-			$file['thumbnailUrl'] = $this->config['defaultThumb'];
+		$file['thumbnailUrl'] = URL::to($this->config['defaultThumb']);
+		if ($file['isImage'])
+		{
+			if ($this->config['imageThumb'])
+				$file['thumbnailUrl'] = URL::to($this->config['path'].'thumbnails/'.$file['newFilename']).($this->config['noCacheUrl'] ? '?'.rand(1, 99999) : '');
+			else
+				$file['thumbnailUrl'] = $file['url'];
 		}
 
 		return $file;
@@ -716,7 +717,7 @@ class Upstream {
 	 * @param  array    $config
 	 * @return array
 	 */
-	public function dirFiles($path = false, $config = array())
+	public function directoryFiles($path = false, $config = [])
 	{
 		if (!$path) {
 			$configDefault = Config::get('upstream::upload');
@@ -729,50 +730,72 @@ class Upstream {
 		if (!isset($config['fileTypeOrder']))
 			$config['fileTypeOrder'] = false;
 
-		$result = array();
-		if (is_dir($path)) {
-			if (substr($path, -1) != "/") $path .= "/";
-			if ($handle = opendir($path)) {
-				if ($config['fileTypeOrder']) {
+		if (isset($config['fileTypes']))
+			$config['fileTypes'] = $this->formatFileTypesList($config['fileTypes']);
+		else
+			$config['fileTypes'] = '*';
 
+		$result = [];
+		if (is_dir($path))
+		{
+			if (substr($path, -1) != "/")
+				$path .= "/";
+
+			if ($handle = opendir($path))
+			{
+				if ($config['fileTypeOrder'])
+				{
 					$config['fileTypeOrder'] = $this->formatFileTypesList($config['fileTypeOrder']);
 
 					$files = glob($path.'*.{'.implode(',', $config['fileTypeOrder']).'}', GLOB_BRACE);
 				} else {
 					$files = scandir($path);
 				}
-				foreach ($files as $entry) {
-					if ($config['fileTypeOrder']) $entry = str_replace($path, '', $entry); //if glob, remove path from filename
-					if (is_file($path.$entry)) {
-						$filename = $entry;
-						$fileExt = File::extension($filename);
 
-						$deleteFullUrl = $config['deleteURL'];
-						if ($config['deleteUrl'] != "") $deleteFullUrl .= "/".str_replace(' ', '__', $filename);
+				foreach ($files as $entry)
+				{
+					//if glob, remove path from filename
+					if ($config['fileTypeOrder'])
+						$entry = str_replace($path, '', $entry);
 
-						$file = array(
-							'name'       => $filename,
-							'url'        => URL::to($path.$filename),
-							'fileSize'   => filesize($path.$filename),
-							'fileType'   => filetype($path.$filename),
-							'isImage'    => $this->isImage($filename),
-							'deleteUrl'  => $deleteFullUrl,
-							'deleteType' => 'DELETE',
-							'error'      => false,
-						);
+					if (is_file($path.$entry))
+					{
+						$filename  = $entry;
+						$extension = File::extension($filename);
 
-						if ($file['isImage'] && is_file($path.'thumbnails/'.$filename))
-							$file['thumbnailUrl'] = URL::to($path.'thumbnails/'.$filename);
-						else
-							$file['thumbnailUrl'] = "";
+						if ($config['fileTypes'] == "*" || in_array($extension, $config['fileTypes']))
+						{
+							$deleteFullUrl = $config['deleteUrl'];
+							if ($config['deleteUrl'] != "")
+								$deleteFullUrl .= "/".str_replace(' ', '__', $filename);
 
-						$result[] = $file;
+							$file = array(
+								'name'       => $filename,
+								'url'        => URL::to($path.$filename),
+								'fileSize'   => filesize($path.$filename),
+								'fileType'   => filetype($path.$filename),
+								'isImage'    => $this->isImage($filename),
+								'deleteUrl'  => $deleteFullUrl,
+								'deleteType' => 'DELETE',
+								'error'      => false,
+							);
+
+							if ($file['isImage'])
+								$file['thumbnailUrl'] = is_file($path.'thumbnails/'.$filename) ? URL::to($path.'thumbnails/'.$filename) : $file['url'];
+							else
+								$file['thumbnailUrl'] = URL::to($this->config['defaultThumb']);
+
+							$result[] = $file;
+						}
 					}
 				}
 			}
 		}
 
-		return $result;
+		if (isset($config['returnJson']) && $config['returnJson'])
+			return json_encode($result);
+		else
+			return $result;
 	}
 
 	/**
@@ -782,18 +805,19 @@ class Upstream {
 	 * @param  array    $config
 	 * @return array
 	 */
-	public function dirFilenames($path = '', $config = array())
+	public function directoryFilenames($path = '', $config = [])
 	{
 		if (!isset($config['fileTypeOrder'])) $config['fileTypeOrder'] = false;
 
-		$files = array();
+		$files = [];
 
 		if (substr($path, -1) != "/")
 			$path .= "/";
 
-		if (is_dir($path) && $handle = opendir($path)) {
-			if ($config['fileTypeOrder']) {
-
+		if (is_dir($path) && $handle = opendir($path))
+		{
+			if ($config['fileTypeOrder'])
+			{
 				$config['fileTypeOrder'] = $this->formatFileTypesList($config['fileTypeOrder']);
 
 				$files_list = glob($path.'*.{'.implode(',', $config['fileTypeOrder']).'}', GLOB_BRACE);
@@ -801,7 +825,8 @@ class Upstream {
 				$files_list = scandir($path);
 			}
 
-			foreach ($files_list as $entry) {
+			foreach ($files_list as $entry)
+			{
 				$entry = str_replace($path, '', $entry); //if glob, remove path from filename
 				if (is_file($path.$entry)) $files[] = $entry;
 			}
@@ -809,7 +834,7 @@ class Upstream {
 
 		if (isset($config['returnJson']) && $config['returnJson'])
 			return json_encode($files);
-		else if (isset($config['returnStr']) && $config['returnStr'])
+		elseif (isset($config['returnStr']) && $config['returnStr'])
 			return implode(', ', $files);
 		else
 			return $files;
@@ -821,28 +846,35 @@ class Upstream {
 	 * @param  array    $fileTypes
 	 * @return array
 	 */
-	public function formatFileTypesList($fileTypes = array())
+	public function formatFileTypesList($fileTypes = [])
 	{
-		$fileTypesFormatted = array();
+		$fileTypesFormatted = [];
+
+		if (is_string($fileTypes) && ($fileTypes == "image" || $fileTypes == "images"))
+			$fileTypes = $this->imageExtensions;
 
 		if (!is_array($fileTypes))
 			$fileTypes = explode('|', $fileTypes);
 
 		$fileTypeCategories = Config::get('upstream::fileTypeCategories');
-		for ($t=0; $t < count($fileTypes); $t++) {
+		for ($t=0; $t < count($fileTypes); $t++)
+		{
 			$category = false;
-			foreach ($fileTypeCategories as $fileTypeCategory => $fileTypesForCategory) {
-				if ($fileTypes[$t] == $fileTypeCategory) {
+
+			foreach ($fileTypeCategories as $fileTypeCategory => $fileTypesForCategory)
+			{
+				if ($fileTypes[$t] == $fileTypeCategory)
+				{
 					$category = true;
+
 					foreach ($fileTypesForCategory as $fileType) {
 						$fileTypesFormatted[] = $fileType;
 					}
 				}
 			}
 
-			if (!$category) {
+			if (!$category)
 				$fileTypesFormatted[] = $fileTypes[$t];
-			}
 		}
 
 		return $fileTypesFormatted;
@@ -986,10 +1018,11 @@ class Upstream {
 		if (is_file($file))
 			$success = unlink($file);
 
-		$fileExt = File::extension($file);
+		$extension = File::extension($file);
 
 		//delete thumbnail image if it exists
-		if (in_array($fileExt, $this->imageExtensions)) {
+		if (in_array($extension, $this->imageExtensions))
+		{
 			$pathArray = explode('/', $file);
 			$path      = "";
 			$last      = count($pathArray) - 1;
@@ -1016,18 +1049,22 @@ class Upstream {
 	 * @param  array    $limits
 	 * @return array
 	 */
-	public function dirFileLimits($directory = '', $limits = array())
+	public function directoryFileLimits($directory = '', $limits = [])
 	{
-		if (substr($directory, -1) != "/") $directory .= "/"; //add trailing slash to directory if it doesn't exist
-		$deletedFiles = array();
+		//add trailing slash to directory if it doesn't exist
+		if (substr($directory, -1) != "/")
+			$directory .= "/";
 
-		if (is_dir($directory) && $handle = opendir($directory)) {
-			foreach ($limits as $fileTypes => $limit) {
+		$deletedFiles = [];
 
+		if (is_dir($directory) && $handle = opendir($directory))
+		{
+			foreach ($limits as $fileTypes => $limit)
+			{
 				$fileTypes = $this->formatFileTypesList($fileTypes);
 
-				$filesForType = array();
-				$quantity = 0;
+				$filesForType = [];
+				$quantity     = 0;
 
 				while (false !== ($entry = readdir($handle))) {
 					if (is_file($directory.$entry)) {
@@ -1086,7 +1123,7 @@ class Upstream {
 						unlink($directory.$entry);
 						$deletedFiles ++;
 					} else if (is_dir($directory.$entry)) { //delete sub-directory and all files/directorys it contains
-						$deletedFiles += $this->deleteDirectory($directory.$entry, true);	
+						$deletedFiles += $this->deleteDirectory($directory.$entry, true);
 					}
 				}
 			} //end while file in directory
