@@ -1,25 +1,23 @@
 {
-    "name": "regulus/upstream",
-    "description": "A simple composer package that assists in file uploads and image resizing/cropping.",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Cody Jassman",
-            "email": "me@codyjassman.com"
-        }
-    ],
-    "require": {
-        "php": ">=5.4.0",
-        "illuminate/support": "4.2.*",
-        "julien-c/simple-resize": "@dev"
-    },
-    "autoload": {
-        "classmap": [
-            "src/migrations"
-        ],
-        "psr-0": {
-            "Regulus\\Upstream\\": "src/"
-        }
-    },
-    "minimum-stability": "stable"
+	"name": "regulus/upstream",
+	"description": "A simple composer package for Laravel 5 that assists in file uploads and image resizing/cropping.",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Cody Jassman",
+			"email": "me@codyjassman.com"
+		}
+	],
+	"require": {
+		"php": ">=5.4.0",
+		"laravel/framework": "5.0.*",
+
+		"intervention/image": "2.1.1"
+	},
+	"autoload": {
+		"psr-4": {
+			"Regulus\\Upstream\\": "src/"
+		}
+	},
+	"minimum-stability": "stable"
 }

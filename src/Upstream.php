@@ -2,18 +2,17 @@
 
 /*----------------------------------------------------------------------------------------------------------
 	Upstream
-		A simple composer package that assists in file uploads and image resizing/cropping.
+		A simple composer package for Laravel 5 that assists in file uploads and image resizing/cropping.
 
 		created by Cody Jassman
-		version 0.4.5
-		last updated on January 7, 2015
+		version 0.5.0
+		last updated on March 5, 2015
 ----------------------------------------------------------------------------------------------------------*/
 
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\URL;
 
-use SimpleResize as Resize;
+use Intervention\Image\Facades\Image;
 
 class Upstream {
 
@@ -30,8 +29,8 @@ class Upstream {
 	 */
 	public function __construct($config = [])
 	{
-		//default settings
-		$this->config = array_merge(Config::get('upstream::upload'), $config);
+		//set default config
+		$this->config = array_merge($this->formatDefaultConfig(), $config);
 	}
 
 	/**
@@ -43,6 +42,20 @@ class Upstream {
 	public function make($config = [])
 	{
 		return new static($config);
+	}
+
+	private function formatDefaultConfig($defaultConfig = null)
+	{
+		if (is_null($defaultConfig))
+			$defaultConfig = config('upload.defaults.upload');
+
+		$formatted = [];
+		foreach (config('upload.defaults') as $configItem => $value)
+		{
+			$formatted[camel_case($configItem)] = is_array($value) ? $this->formatDefaultConfig($value) : $value;
+		}
+
+		return $formatted;
 	}
 
 	/**
@@ -295,10 +308,10 @@ class Upstream {
 										}
 									}
 
-									//resize image with SimpleResize
-									$resize = new Resize($this->config['path'].$file['newFilename']);
-									$resize->resizeImage($resizeDimensions['w'], $resizeDimensions['h'], $resizeType);
-									$resize->saveImage($this->config['path'].$file['newFilename'], $this->config['imageResizeQuality']);
+									//resize image
+									$image = Image::make($this->config['path'].$file['newFilename']);
+									$image->resize($resizeDimensions['w'], $resizeDimensions['h']);
+									$image->save($this->config['path'].$file['newFilename'], $this->config['imageResizeQuality']);
 								}
 
 								//create thumbnail image if necessary
@@ -556,23 +569,23 @@ class Upstream {
 	 */
 	public function cropImage($config = [])
 	{
-		$config = array_merge(Config::get('upstream::crop'), $config);
-
+		$config     = array_merge($this->formatDefaultConfig(config('defaults.crop')), $config);
 		$returnData = array('error' => 'Something went wrong. Please try again.');
-
-		$path = $config['path'];
+		$path       = $config['path'];
 
 		$originalFilename = $config['filename'];
 		$originalFileExt  = File::extension($config['filename']);
 
 		//error check 1: file not found
-		if (!is_file($path.$originalFilename)) {
+		if (!is_file($path.$originalFilename))
+		{
 			$returnData['error'] = 'The file you specified was not found ('.$originalFilename.').';
 			return $returnData;
 		}
 
 		//error check 2: file is not an image
-		if (!in_array($originalFileExt, $this->imageExtensions)) {
+		if (!in_array($originalFileExt, $this->imageExtensions))
+		{
 			$returnData['error'] = 'The file you specified was not an image ('.$originalFilename.').';
 			return $returnData;
 		}
@@ -590,14 +603,15 @@ class Upstream {
 		$fileExt = File::extension($filename);
 
 		//if file extension doesn't exist, use original extension
-		if ($fileExt == "") {
+		if ($fileExt == "")
+		{
 			$fileExt   = $originalFileExt;
 			$filename .= '.'.$fileExt;
 		}
 
 		//create image data from image file depending on file type
 		$fileType = "";
-		if (in_array($originalFileExt, array('jpg', 'jpeg'))) {
+		if (in_array($originalFileExt, ['jpg', 'jpeg'])) {
 			$imageOriginal = imagecreatefromjpeg($path.$originalFilename);
 			$fileType      = "jpg";
 		} else if ($originalFileExt == "gif") {
@@ -608,9 +622,11 @@ class Upstream {
 			$fileType      = "png";
 		}
 
-		if (isset($imageOriginal)) {
+		if (isset($imageOriginal))
+		{
 			//error check 3: file exists and overwrite not set
-			if (is_file($newPath.$file['newFilename'])) {
+			if (is_file($newPath.$file['newFilename']))
+			{
 				if ($config['overwrite']) { //delete existing file if it exists and overwrite is set
 					unlink($newPath.$file['newFilename']);
 				} else {
@@ -619,7 +635,8 @@ class Upstream {
 				}
 			}
 
-			if (!is_dir($config['newPath'])) {
+			if (!is_dir($config['newPath']))
+			{
 				if ($config['createDirectory']) {
 					$this->createDirectory($config['newPath']);
 				} else {
@@ -639,17 +656,16 @@ class Upstream {
 			);
 
 			//save cropped image to file
-			if ($fileType == "jpg") {
+			if ($fileType == "jpg")
 				imagejpeg($imageCropped, $newPath.$filename, 72);
-			} else if ($fileType == "gif") {
+			elseif ($fileType == "gif")
 				imagegif($imageCropped, $newPath.$filename);
-			} else if ($fileType == "png") {
+			elseif ($fileType == "png")
 				imagepng($imageCropped, $newPath.$filename, 72);
-			}
 
 			$returnData['error'] = false;
-			$returnData['name'] = $filename;
-			$returnData['path'] = $newPath;
+			$returnData['name']  = $filename;
+			$returnData['path']  = $newPath;
 		}
 
 		return $returnData;
@@ -680,7 +696,9 @@ class Upstream {
 		} else if ($filenameModifier == "[RANDOM]") {
 			$newFilename = substr(md5(rand(1, 9999999)), 0, 10);
 		} else {
-			if ($suffix && $suffix != "") { //append suffix if it is set
+			//append suffix if it is set
+			if ($suffix && $suffix != "")
+			{
 				$fileExt = File::extension($newFilename);
 				$newFilename = str_replace('.'.$fileExt, '', $newFilename); //remove extension
 				$newFilename .= '_'.$suffix.'.'.$fileExt;
@@ -694,7 +712,8 @@ class Upstream {
 
 		$addExt = false;
 
-		if ($newFileExt == "") {
+		if ($newFileExt == "")
+		{
 			$newFileExt = $fileExt;
 			$addExt     = true;
 		}
@@ -719,9 +738,10 @@ class Upstream {
 	 */
 	public function directoryFiles($path = false, $config = [])
 	{
-		if (!$path) {
-			$configDefault = Config::get('upstream::upload');
-			$path = $configDefault['path'];
+		if (!$path)
+		{
+			$config = array_merge($this->formatDefaultConfig(config('upload.default.upload')), $config);
+			$path   = $config['path'];
 		}
 
 		if (!isset($config['deleteUrl']))
@@ -769,7 +789,7 @@ class Upstream {
 							if ($config['deleteUrl'] != "")
 								$deleteFullUrl .= "/".str_replace(' ', '__', $filename);
 
-							$file = array(
+							$file = [
 								'name'       => $filename,
 								'url'        => URL::to($path.$filename),
 								'fileSize'   => filesize($path.$filename),
@@ -778,7 +798,7 @@ class Upstream {
 								'deleteUrl'  => $deleteFullUrl,
 								'deleteType' => 'DELETE',
 								'error'      => false,
-							);
+							];
 
 							if ($file['isImage'])
 								$file['thumbnailUrl'] = is_file($path.'thumbnails/'.$filename) ? URL::to($path.'thumbnails/'.$filename) : $file['url'];
@@ -856,7 +876,7 @@ class Upstream {
 		if (!is_array($fileTypes))
 			$fileTypes = explode('|', $fileTypes);
 
-		$fileTypeCategories = Config::get('upstream::fileTypeCategories');
+		$fileTypeCategories = config('upload.file_type_categories');
 		for ($t=0; $t < count($fileTypes); $t++)
 		{
 			$category = false;
@@ -916,8 +936,10 @@ class Upstream {
 		$pathPartial        = "";
 		$directoriesCreated = 0;
 
-		for ($p=0; $p < count($pathArray); $p++) {
-			if ($pathArray[$p] != "") {
+		for ($p=0; $p < count($pathArray); $p++)
+		{
+			if ($pathArray[$p] != "")
+			{
 				if ($pathPartial != "")
 					$pathPartial .= "/";
 
@@ -942,17 +964,18 @@ class Upstream {
 	 */
 	public function imageSize($image)
 	{
-		if (is_file($image)) {
+		if (is_file($image))
+		{
 			$image = getimagesize($image);
-			return array(
+			return [
 				'w' => $image[0],
 				'h' => $image[1],
-			);
+			];
 		} else {
-			return array(
+			return [
 				'w' => 0,
 				'h' => 0,
-			);
+			];
 		}
 	}
 
@@ -965,7 +988,8 @@ class Upstream {
 	 */
 	public function fileSize($file, $convert = true)
 	{
-		if (is_file($file)) {
+		if (is_file($file))
+		{
 			$fileSize = filesize($file);
 
 			if ($convert)
@@ -1043,7 +1067,7 @@ class Upstream {
 
 	/**
 	 * Apply file limits by type to a specified directory. If a file type's limit is exceeded,
-	 * files will be deleted starting with the oldest files. Example array: array('jpg' => 3, 'pdf' => 3);
+	 * files will be deleted starting with the oldest files. Example array: ['jpg' => 3, 'pdf' => 3];
 	 *
 	 * @param  string   $directory
 	 * @param  array    $limits
@@ -1144,7 +1168,7 @@ class Upstream {
 	 */
 	public function isImage($file = '')
 	{
-		return in_array(strtolower(File::extension($file)), array('png', 'jpg', 'jpeg', 'gif', 'svg'));
+		return in_array(strtolower(File::extension($file)), array_merge($this->imageExtensions, ['svg']));
 	}
 
 	/**

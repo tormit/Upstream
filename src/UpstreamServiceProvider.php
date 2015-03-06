@@ -18,7 +18,9 @@ class UpstreamServiceProvider extends ServiceProvider {
 	 */
 	public function boot()
 	{
-		$this->package('regulus/upstream');
+		$this->publishes([
+			__DIR__.'/config/upload.php' => config_path('upload.php'),
+		]);
 	}
 
 	/**
@@ -28,8 +30,9 @@ class UpstreamServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
-		$this->app['upstream'] = $this->app->share(function($app) {
-			return new Upstream();
+		$this->app->singleton('Regulus\Upstream\Upstream', function()
+		{
+			return new Upstream;
 		});
 	}
 
@@ -40,7 +43,7 @@ class UpstreamServiceProvider extends ServiceProvider {
 	 */
 	public function provides()
 	{
-		return array();
+		return [];
 	}
 
 }

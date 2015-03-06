@@ -1,7 +1,9 @@
 Upstream
 ========
 
-A simple composer package that assists in file uploads and image resizing/cropping. Works great with jCrop and jquery-file-upload.
+A simple composer package for Laravel 5 that assists in file uploads and image resizing/cropping. Works great with jCrop and jquery-file-upload.
+
+> **Note:** For Laravel 4, you may use <a href="https://github.com/Regulus343/Upstream/tree/v0.4.5">version 0.4.5</a>.
 
 - [Installation](#installation)
 - [Uploading Files](#uploading-files)
@@ -10,13 +12,13 @@ A simple composer package that assists in file uploads and image resizing/croppi
 <a name="installation"></a>
 ## Installation
 
-To install Upstream, make sure `regulus/upstream` has been added to Laravel 4's `composer.json` file.
+To install Upstream, make sure `regulus/upstream` has been added to Laravel 5's `composer.json` file.
 
 	"require": {
-		"regulus/upstream": "0.4.5"
+		"regulus/upstream": "dev-master"
 	},
 
-Then run `php composer.phar update` from the command line. Composer will install the Upstream package. Now, all you have to do is register the service provider and set up Upstream's alias in `app/config/app.php`. Add this to the `providers` array:
+Then run `php composer.phar update` from the command line. Composer will install the Upstream package. Now, all you have to do is register the service provider and set up Upstream's alias in `config/app.php`. Add this to the `providers` array:
 
 	'Regulus\Upstream\UpstreamServiceProvider',
 
@@ -27,7 +29,7 @@ And add this to the `aliases` array:
 <a name="uploading-files"></a>
 ## Uploading Files
 
-	$config = array(
+	$config = [
 		'path'            => 'uploads/pdfs', //the path to upload to
 		'fields'          => 'file',         //name of field or fields
 		'filename'        => 'temp',         //the basename of the file (extension will be added automatically)
@@ -35,7 +37,7 @@ And add this to the `aliases` array:
 		'createDirectory' => true,           //automatically creates directory if it doesn't exist
 		'overwrite'       => true,           //whether or not to overwrite existing file of the same name
 		'maxFileSize'     => '5MB',          //the maximum filesize of file to be uploaded
-	);
+	];
 
 	$upstream = Upstream::make($config);
 	$result   = $upstream->upload();
@@ -45,7 +47,7 @@ And add this to the `aliases` array:
 <a name="images"></a>
 ## Resizing Images and Creating Thumbnails
 
-	$config = array(
+	$config = [
 		'path'               => 'uploads/images',
 		'fields'             => 'file',
 		'filename'           => 'temp',
@@ -62,7 +64,7 @@ And add this to the `aliases` array:
 			'tw' => 180, //thumbnail image width
 			'th' => 180, //thumbnail image height
 		],
-	);
+	];
 
 	$upstream = Upstream::make($config);
 	$result   = $upstream->upload();
