@@ -1,7 +1,7 @@
 Upstream
 ========
 
-**A simple composer package for Laravel 5 that assists in file uploads and image resizing/cropping. Works great with jCrop and jquery-file-upload.**
+**A simple composer package for Laravel 5 that assists in file uploads and image resizing/cropping.**
 
 > **Note:** For Laravel 4, you may use <a href="https://github.com/Regulus343/Upstream/tree/v0.4.5">version 0.4.5</a>.
 
