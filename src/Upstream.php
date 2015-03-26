@@ -47,7 +47,7 @@ class Upstream {
 	private function formatDefaultConfig($defaultConfig = null)
 	{
 		if (is_null($defaultConfig))
-			$defaultConfig = config('upload.defaults.upload');
+			$defaultConfig = config('upload.defaults');
 
 		$formatted = [];
 		foreach ($defaultConfig as $configItem => $value)
@@ -66,11 +66,11 @@ class Upstream {
 	 */
 	public function upload($config = [])
 	{
-		//modify upload settings through a single config parameter
+		// modify upload settings through a single config parameter
 		if (!empty($config))
 			$this->config = array_merge($this->config, $config);
 
-		//set file types config
+		// set file types config
 		if ($this->config['fileTypes'] != '*')
 		{
 			$fileTypesImage = $this->config['fileTypes'] == "image" || $this->config['fileTypes'] == "images";
@@ -78,7 +78,7 @@ class Upstream {
 			$this->config['fileTypes'] = $this->formatFileTypesList($this->config['fileTypes']);
 		}
 
-		//format error triggers
+		// format error triggers
 		if ($this->config['maxFileSize'])    $this->config['maxFileSize']    = strtoupper(str_replace(' ', '', $this->config['maxFileSize']));
 		if ($this->config['imageMinWidth'])  $this->config['imageMinWidth']  = str_replace('px', '', strtolower($this->config['imageMinWidth']));
 		if ($this->config['imageMinHeight']) $this->config['imageMinHeight'] = str_replace('px', '', strtolower($this->config['imageMinHeight']));
@@ -92,17 +92,18 @@ class Upstream {
 
 		if ($_FILES)
 		{
-			//add trailing slash to path if it doesn't exist
+			// add trailing slash to path if it doesn't exist
 			if (substr($this->config['path'], -1) != "/")
 				$this->config['path'] .= "/";
 
-			//create files array
+			// create files array
 			$this->files = [];
 
-			foreach ($_FILES as $field => $filesInfo) {
+			foreach ($_FILES as $field => $filesInfo)
+			{
 				if (!empty($filesInfo))
 				{
-					//check if field is set to be uploaded in "fields" configuration
+					// check if field is set to be uploaded in "fields" configuration
 					if ((is_string($this->config['fields']) && $this->config['fields'] == $field)
 					|| (is_array($this->config['fields']) && in_array($field, $this->config['fields']))
 					|| (is_bool($this->config['fields']) && $this->config['fields']))
@@ -112,7 +113,7 @@ class Upstream {
 
 					if ($uploadFile && isset($filesInfo['name']))
 					{
-						//array of files exists rather than just a single file; loop through them
+						// array of files exists rather than just a single file; loop through them
 						if (is_array($filesInfo['name']))
 						{
 							$keys = array_keys($filesInfo['name']);
@@ -148,25 +149,26 @@ class Upstream {
 			$f = 1;
 			foreach ($this->files as $i => &$file)
 			{
-				if ($file['field'] != $this->config['fieldThumb']) {
+				if ($file['field'] != $this->config['fieldThumb'])
+				{
 					$file = $this->addAdditionalFileData($file);
 
-					//create directory if necessary
+					// create directory if necessary
 					if ($this->config['createDirectory'] && !is_dir($this->config['path'])) $this->createDirectory($this->config['path']);
 
-					//get image dimensions if file is an image
+					// get image dimensions if file is an image
 					$dimensions = [];
 					if (in_array($file['extension'], $this->imageExtensions))
 						$dimensions = $this->imageSize($file['tmpName']);
 
-					//check for errors
+					// check for errors
 					$error           = false;
 					$attemptedUpload = false;
 
 					if ($file['name'] != "")
 						$attemptedUpload = true;
 
-					//error check 1: file exists and overwrite not set
+					// error check 1: file exists and overwrite not set
 					if (is_file($this->config['path'].$file['newFilename']))
 					{
 						if ($this->config['overwrite']) //delete existing file if it exists and overwrite is set
@@ -175,17 +177,21 @@ class Upstream {
 							$error = 'A file already exists with the name specified ('.$file['newFilename'].').';
 					}
 
-					//error check 2: file type
+					// error check 2: file type
 					if (!$error && $this->config['fileTypes'] != '*' && is_array($this->config['fileTypes']))
 					{
-						if ($file['name'] != "") {
-							if (!in_array($file['extension'], $this->config['fileTypes'])) {
+						if ($file['name'] != "")
+						{
+							if (!in_array($file['extension'], $this->config['fileTypes']))
+							{
 								if ($fileTypesImage)
 									$error = 'You must upload an image file.';
 								else
 									$error = 'You must upload a file in one of the following formats: '.implode(', ', $this->config['fileTypes']).'. ('.$file['name'].')';
 							}
-						} else {
+						}
+						else
+						{
 							if ($fileTypesImage)
 								$error = 'You must upload an image.';
 							else
@@ -193,7 +199,7 @@ class Upstream {
 						}
 					}
 
-					//error check 3: maximum file size
+					// error check 3: maximum file size
 					if (!$error && $this->config['maxFileSize'])
 					{
 						$maxFileSize = $this->config['maxFileSize'];
@@ -211,7 +217,7 @@ class Upstream {
 							$error = 'Your file must not exceed '.$maxFileSize.'.';
 					}
 
-					//error check 4: minimum image dimensions
+					// error check 4: minimum image dimensions
 					if (!$error && in_array($file['extension'], $this->imageExtensions) && !empty($dimensions) && ($this->config['imageMinWidth'] || $this->config['imageMinHeight']))
 					{
 						$errorWidth  = $this->config['imageMinWidth']  && $dimensions['w'] < $this->config['imageMinWidth'];
@@ -230,7 +236,7 @@ class Upstream {
 						}
 					}
 
-					//error check 5: maximum image dimensions
+					// error check 5: maximum image dimensions
 					$maxWidthExceeded  = false;
 					$maxHeightExceeded = false;
 
@@ -263,17 +269,18 @@ class Upstream {
 
 					if (!$error)
 					{
-						//upload file to selected directory
+						// upload file to selected directory
 						$fileTransfered = move_uploaded_file($file['tmpName'], $this->config['path'].$file['newFilename']);
 
-						//resize image if necessary
-						if ($fileTransfered) {
+						// resize image if necessary
+						if ($fileTransfered)
+						{
 							if (in_array($file['extension'], $this->imageExtensions))
 							{
 								if ($this->config['imageResize']
 								|| ($this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded)))
 								{
-									//configure resized image dimensions
+									// configure resized image dimensions
 									$resizeType = $this->config['imageResizeDefaultType'];
 
 									if ($this->config['imageCrop'])
@@ -285,20 +292,27 @@ class Upstream {
 											'w' => $this->config['imageDimensions']['w'],
 											'h' => $this->config['imageDimensions']['h'],
 										];
-									} else {
-										if ($maxWidthExceeded && $maxHeightExceeded) {
+									}
+									else
+									{
+										if ($maxWidthExceeded && $maxHeightExceeded)
+										{
 											$resizeDimensions = [
 												'w' => $this->config['imageMaxWidth'],
 												'h' => $this->config['imageMaxHeight'],
 											];
-										} else if ($maxWidthExceeded) {
+										}
+										else if ($maxWidthExceeded)
+										{
 											$resizeDimensions = [
 												'w' => $this->config['imageMaxWidth'],
 												'h' => false,
 											];
 
 											$resizeType = 'landscape';
-										} else if ($maxHeightExceeded) {
+										}
+										else if ($maxHeightExceeded)
+										{
 											$resizeDimensions = [
 												'w' => false,
 												'h' => $this->config['imageMaxHeight'],
@@ -308,13 +322,27 @@ class Upstream {
 										}
 									}
 
-									//resize image
+									// resize image
 									$image = Image::make($this->config['path'].$file['newFilename']);
-									$image->resize($resizeDimensions['w'], $resizeDimensions['h']);
+
+									if ($resizeType == "crop")
+									{
+										$image->resize($resizeDimensions['w'] * 1.4, $resizeDimensions['h'] * 1.4, function ($constraint)
+										{
+											$constraint->aspectRatio();
+										});
+
+										$image->crop($resizeDimensions['w'], $resizeDimensions['h']);
+									}
+									else
+									{
+										$image->resize($resizeDimensions['w'], $resizeDimensions['h']);
+									}
+
 									$image->save($this->config['path'].$file['newFilename'], $this->config['imageResizeQuality']);
 								}
 
-								//create thumbnail image if necessary
+								// create thumbnail image if necessary
 								if ($this->config['imageThumb'])
 									$this->createThumbnailImage($file);
 							}
@@ -322,11 +350,14 @@ class Upstream {
 							$file = $this->addImageDimensionsData($file);
 						}
 
-						if ($fileTransfered) {
+						if ($fileTransfered)
+						{
 							$this->addFile($file);
 
 							$this->returnData['error'] = false;
-						} else {
+						}
+						else
+						{
 							$this->returnData['files'][$fileIndex]['error'] = 'Something went wrong. Please try again.';
 						}
 					} else {
@@ -340,9 +371,9 @@ class Upstream {
 				}
 
 				$f ++;
-			} //end foreach files
+			} // end foreach files
 
-			//create thumbnail image if necessary (from thumbnail image field)
+			// create thumbnail image if necessary (from thumbnail image field)
 			if ($this->config['imageThumb'] && isset($this->files[$this->config['fieldThumb']]))
 			{
 				$this->createThumbnailImage();
@@ -353,7 +384,7 @@ class Upstream {
 			if ($this->config['returnSingleResult'])
 				return $this->returnData = $this->returnData['files'][0];
 
-			//return result
+			// return result
 			if ($this->config['returnJson'])
 				return json_encode($this->returnData);
 			else
@@ -375,9 +406,12 @@ class Upstream {
 		$originalFilename = $file['name'];
 		$originalFileExt  = strtolower(File::extension($originalFilename));
 
-		if (!$this->config['filename']) {
+		if (!$this->config['filename'])
+		{
 			$filename = $this->filename($originalFilename);
-		} else {
+		}
+		else
+		{
 			if (in_array($this->config['filename'], array('[LOWERCASE]', '[UNDERSCORE]', '[LOWERCASE-UNDERSCORE]', '[RANDOM]')))
 				$filename = $this->filename($originalFilename, $this->config['filename']);
 			else
@@ -387,7 +421,7 @@ class Upstream {
 		$filename = str_replace('[KEY]', $file['key'], $filename);
 		$fileExt  = File::extension($filename);
 
-		//if file extension doesn't exist, use original extension
+		// if file extension doesn't exist, use original extension
 		if ($fileExt == "") {
 			$fileExt   = $originalFileExt;
 			$filename .= '.'.$fileExt;
@@ -410,20 +444,20 @@ class Upstream {
 			'th' => null,
 		];
 
-		//set path
+		// set path
 		$file['path'] = $this->config['path'];
 		if ($this->config['fieldThumb'] && $file['field'] == $this->config['fieldThumb'])
 			$file['path'] .= 'thumbnails';
 
-		//add image dimensions
+		// add image dimensions
 		$file = $this->addImageDimensionsData($file);
 
-		//set URL
+		// set URL
 		$file['url'] = URL::to(str_replace('//', '/', $file['path'].'/'.$file['newFilename']));
 		if ($this->config['noCacheUrl'])
 			$file['url'] .= '?'.rand(1, 99999);
 
-		//set thumbnail image URL
+		// set thumbnail image URL
 		$file['thumbnailUrl'] = URL::to($this->config['defaultThumb']);
 		if ($file['isImage'])
 		{
@@ -447,7 +481,9 @@ class Upstream {
 		if ($file['isImage'] && File::exists($this->config['path'].'/'.$file['newFilename']))
 		{
 			$size = getimagesize($this->config['path'].'/'.$file['newFilename']);
-			if (!empty($size)) {
+
+			if (!empty($size))
+			{
 				$file['imageDimensions']['w'] = $size[0];
 				$file['imageDimensions']['h'] = $size[1];
 
@@ -539,16 +575,25 @@ class Upstream {
 		if (!File::exists($thumbSource))
 			return false;
 
-		//resize image with SimpleResize
-		$resize = new Resize($thumbSource);
-		$resize->resizeImage($resizeDimensions['w'], $resizeDimensions['h'], 'crop');
-		$resize->saveImage($thumbsPath.$thumbFilename, $this->config['imageResizeQuality']);
+		// resize image
+		$image = Image::make($thumbSource);
+
+		$image->resize($resizeDimensions['w'] * 1.4, $resizeDimensions['h'] * 1.4, function ($constraint)
+		{
+			$constraint->aspectRatio();
+		});
+
+		$image->crop($resizeDimensions['w'], $resizeDimensions['h']);
+		$image->save($thumbsPath.$thumbFilename, $this->config['imageResizeQuality']);
 
 		$this->returnData['error'] = false;
 
-		if ($fieldThumb) {
+		if ($fieldThumb)
+		{
 			$size = getimagesize($thumbsPath.$thumbFilename);
-			if (!empty($size)) {
+
+			if (!empty($size))
+			{
 				$file['imageDimensions']['w']  = $size[0];
 				$file['imageDimensions']['h']  = $size[1];
 				$file['imageDimensions']['tw'] = $size[0];
@@ -576,14 +621,14 @@ class Upstream {
 		$originalFilename = $config['filename'];
 		$originalFileExt  = File::extension($config['filename']);
 
-		//error check 1: file not found
+		// error check 1: file not found
 		if (!is_file($path.$originalFilename))
 		{
 			$returnData['error'] = 'The file you specified was not found ('.$originalFilename.').';
 			return $returnData;
 		}
 
-		//error check 2: file is not an image
+		// error check 2: file is not an image
 		if (!in_array($originalFileExt, $this->imageExtensions))
 		{
 			$returnData['error'] = 'The file you specified was not an image ('.$originalFilename.').';
@@ -602,14 +647,14 @@ class Upstream {
 
 		$fileExt = File::extension($filename);
 
-		//if file extension doesn't exist, use original extension
+		// if file extension doesn't exist, use original extension
 		if ($fileExt == "")
 		{
 			$fileExt   = $originalFileExt;
 			$filename .= '.'.$fileExt;
 		}
 
-		//create image data from image file depending on file type
+		// create image data from image file depending on file type
 		$fileType = "";
 		if (in_array($originalFileExt, ['jpg', 'jpeg'])) {
 			$imageOriginal = imagecreatefromjpeg($path.$originalFilename);
@@ -624,10 +669,10 @@ class Upstream {
 
 		if (isset($imageOriginal))
 		{
-			//error check 3: file exists and overwrite not set
+			// error check 3: file exists and overwrite not set
 			if (is_file($newPath.$file['newFilename']))
 			{
-				if ($config['overwrite']) { //delete existing file if it exists and overwrite is set
+				if ($config['overwrite']) { // delete existing file if it exists and overwrite is set
 					unlink($newPath.$file['newFilename']);
 				} else {
 					$returnData['error'] = 'A file already exists with the name specified ('.$file['newFilename'].').';
@@ -645,7 +690,7 @@ class Upstream {
 				}
 			}
 
-			//crop image
+			// crop image
 			$imageCropped = imagecreatetruecolor($config['imageDimensions']['w'], $config['imageDimensions']['h']);
 
 			imagecopyresampled(
@@ -655,7 +700,7 @@ class Upstream {
 				$config['cropPosition']['w'],    $config['cropPosition']['h']
 			);
 
-			//save cropped image to file
+			// save cropped image to file
 			if ($fileType == "jpg")
 				imagejpeg($imageCropped, $newPath.$filename, 72);
 			elseif ($fileType == "gif")
@@ -686,7 +731,7 @@ class Upstream {
 		$newFilename = strtr($filename, 'ÀÁÂÃÄÅÇÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÝàáâãäåçèéêëìíîïðòóôõöùúûüýÿ', 'AAAAAACEEEEIIIIOOOOOUUUUYaaaaaaceeeeiiiioooooouuuuyy');
 		$filename    = preg_replace('/([^.a-z0-9]+)/i', '_', $filename); //replace characters other than letters, numbers and . by _
 
-		//get filename
+		// get filename
 		if ($filenameModifier == "[LOWERCASE]") {
 			$newFilename = strtolower($newFilename);
 		} else if ($filenameModifier == "[UNDERSCORE]") {
@@ -696,7 +741,7 @@ class Upstream {
 		} else if ($filenameModifier == "[RANDOM]") {
 			$newFilename = substr(md5(rand(1, 9999999)), 0, 10);
 		} else {
-			//append suffix if it is set
+			// append suffix if it is set
 			if ($suffix && $suffix != "")
 			{
 				$fileExt = File::extension($newFilename);
@@ -705,7 +750,7 @@ class Upstream {
 			}
 		}
 
-		//get file extension
+		// get file extension
 		$newFileExt = File::extension($newFilename);
 		if ($fileExt == "ext")
 			$newFileExt = $fileExt;
@@ -774,7 +819,7 @@ class Upstream {
 
 				foreach ($files as $entry)
 				{
-					//if glob, remove path from filename
+					// if glob, remove path from filename
 					if ($config['fileTypeOrder'])
 						$entry = str_replace($path, '', $entry);
 
@@ -847,7 +892,7 @@ class Upstream {
 
 			foreach ($files_list as $entry)
 			{
-				$entry = str_replace($path, '', $entry); //if glob, remove path from filename
+				$entry = str_replace($path, '', $entry); // if glob, remove path from filename
 				if (is_file($path.$entry)) $files[] = $entry;
 			}
 		}
@@ -1044,7 +1089,7 @@ class Upstream {
 
 		$extension = File::extension($file);
 
-		//delete thumbnail image if it exists
+		// delete thumbnail image if it exists
 		if (in_array($extension, $this->imageExtensions))
 		{
 			$pathArray = explode('/', $file);
@@ -1075,7 +1120,7 @@ class Upstream {
 	 */
 	public function directoryFileLimits($directory = '', $limits = [])
 	{
-		//add trailing slash to directory if it doesn't exist
+		// add trailing slash to directory if it doesn't exist
 		if (substr($directory, -1) != "/")
 			$directory .= "/";
 
@@ -1098,11 +1143,11 @@ class Upstream {
 								$filesForType[] = $directory.$entry;
 								$quantity ++;
 							}
-						} //end if file extension exists (entry is not a directory)
+						} // end if file extension exists (entry is not a directory)
 					}
-				} //end while file in directory
+				} // end while file in directory
 
-				while ($quantity > $limit) { //if there are too many files of filetype being checked delete until at limit starting with oldest files
+				while ($quantity > $limit) { // if there are too many files of filetype being checked delete until at limit starting with oldest files
 					$oldestFile = -1;
 					foreach ($filesForType as $index => $file) {
 						if ($oldestFile == -1) {
@@ -1118,10 +1163,10 @@ class Upstream {
 						unset($filesForType[$oldestFile]);
 						$quantity --;
 					}
-				} //end while quantity > limit
+				} // end while quantity > limit
 				rewinddir($handle);
-			} //end while limits
-		} //end if directory can be opened
+			} // end while limits
+		} // end if directory can be opened
 
 		return $deletedFiles;
 	}
@@ -1135,7 +1180,7 @@ class Upstream {
 	 */
 	public function deleteDirectory($directory = '', $deleteAllContents = false)
 	{
-		if (substr($directory, -1) != "/") $directory .= "/"; //add trailing slash to directory if it doesn't exist
+		if (substr($directory, -1) != "/") $directory .= "/"; // add trailing slash to directory if it doesn't exist
 		$deletedFiles = 0;
 
 		if (is_dir($directory) && $handle = opendir($directory)) {
@@ -1146,16 +1191,16 @@ class Upstream {
 					if (is_file($directory.$entry)) {
 						unlink($directory.$entry);
 						$deletedFiles ++;
-					} else if (is_dir($directory.$entry)) { //delete sub-directory and all files/directorys it contains
+					} else if (is_dir($directory.$entry)) { // delete sub-directory and all files/directorys it contains
 						$deletedFiles += $this->deleteDirectory($directory.$entry, true);
 					}
 				}
-			} //end while file in directory
+			} // end while file in directory
 
-			//remove directory
+			// remove directory
 			rmdir($directory);
 
-		} //end if directory can be opened
+		} // end if directory can be opened
 
 		return $deletedFiles;
 	}

@@ -30,10 +30,14 @@ class UpstreamServiceProvider extends ServiceProvider {
 	 */
 	public function register()
 	{
+		// bind Upstream
 		$this->app->singleton('Regulus\Upstream\Upstream', function()
 		{
 			return new Upstream;
 		});
+
+		// register additional service providers
+		$this->app->register('Intervention\Image\ImageServiceProvider');
 	}
 
 	/**
