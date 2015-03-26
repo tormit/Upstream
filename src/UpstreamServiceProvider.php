@@ -43,7 +43,7 @@ class UpstreamServiceProvider extends ServiceProvider {
 	 */
 	public function provides()
 	{
-		return ['Regulus\Upstream\Upstream'];
+		return [];
 	}
 
 }

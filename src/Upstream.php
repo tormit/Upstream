@@ -6,7 +6,7 @@
 
 		created by Cody Jassman
 		version 0.5.0
-		last updated on March 5, 2015
+		last updated on March 25, 2015
 ----------------------------------------------------------------------------------------------------------*/
 
 use Illuminate\Support\Facades\File;
@@ -29,7 +29,7 @@ class Upstream {
 	 */
 	public function __construct($config = [])
 	{
-		//set default config
+		// set default config
 		$this->config = array_merge($this->formatDefaultConfig(), $config);
 	}
 
@@ -50,7 +50,7 @@ class Upstream {
 			$defaultConfig = config('upload.defaults.upload');
 
 		$formatted = [];
-		foreach (config('upload.defaults') as $configItem => $value)
+		foreach ($defaultConfig as $configItem => $value)
 		{
 			$formatted[camel_case($configItem)] = is_array($value) ? $this->formatDefaultConfig($value) : $value;
 		}
