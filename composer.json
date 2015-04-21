@@ -12,12 +12,11 @@
 		"php": ">=5.4.0",
 		"laravel/framework": "5.0.*",
 
-		"intervention/image": "2.1.1"
+		"intervention/image": "2.1.3"
 	},
 	"autoload": {
 		"psr-4": {
 			"Regulus\\Upstream\\": "src/"
 		}
-	},
-	"minimum-stability": "stable"
+	}
 }
