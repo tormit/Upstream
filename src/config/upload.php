@@ -53,10 +53,7 @@ return [
 		],
 
 		'display_name'  => false, // use false to use filename as display name
-		'default_thumb' => 'default-thumb-upload.png',
-
-		'return_single_result'     => false,
-		'field_name_as_file_index' => true,
+		'default_thumb' => 'default-thumb-upload.png'
 	],
 
 	/*

@@ -120,7 +120,7 @@ class Upstream {
 
 							foreach ($keys as $key)
 							{
-								$this->files[$field] = [
+								$this->files[$field][] = [
 									'name'    => trim($filesInfo['name'][$key]),
 									'type'    => $filesInfo['type'][$key],
 									'tmpName' => $filesInfo['tmp_name'][$key],
@@ -132,7 +132,7 @@ class Upstream {
 							}
 						} else {
 							$fileInfo            = $filesInfo;
-							$this->files[$field] = [
+							$this->files[$field][] = [
 								'name'    => trim($fileInfo['name']),
 								'type'    => $fileInfo['type'],
 								'tmpName' => $fileInfo['tmp_name'],
@@ -147,230 +147,228 @@ class Upstream {
 			}
 
 			$f = 1;
-			foreach ($this->files as $i => &$file)
+			foreach ($this->files as $fieldName => &$files)
 			{
-				if ($file['field'] != $this->config['fieldThumb'])
-				{
-					$file = $this->addAdditionalFileData($file);
+                foreach ($files as $fileIndex => &$file)
+                {
+                    if ($file['field'] != $this->config['fieldThumb'])
+                    {
+                        $file = $this->addAdditionalFileData($file);
 
-					// create directory if necessary
-					if ($this->config['createDirectory'] && !is_dir($this->config['path'])) $this->createDirectory($this->config['path']);
+                        // create directory if necessary
+                        if ($this->config['createDirectory'] && !is_dir($this->config['path'])) $this->createDirectory($this->config['path']);
 
-					// get image dimensions if file is an image
-					$dimensions = [];
-					if (in_array($file['extension'], $this->imageExtensions))
-						$dimensions = $this->imageSize($file['tmpName']);
+                        // get image dimensions if file is an image
+                        $dimensions = [];
+                        if (in_array($file['extension'], $this->imageExtensions))
+                            $dimensions = $this->imageSize($file['tmpName']);
 
-					// check for errors
-					$error           = false;
-					$attemptedUpload = false;
+                        // check for errors
+                        $error           = false;
+                        $attemptedUpload = false;
 
-					if ($file['name'] != "")
-						$attemptedUpload = true;
+                        if ($file['name'] != "")
+                            $attemptedUpload = true;
 
-					// error check 1: file exists and overwrite not set
-					if (is_file($this->config['path'].$file['newFilename']))
-					{
-						if ($this->config['overwrite']) //delete existing file if it exists and overwrite is set
-							unlink($this->config['path'].$file['newFilename']);
-						else //file exists but overwrite is not set; do not upload
-							$error = 'A file already exists with the name specified ('.$file['newFilename'].').';
-					}
+                        // error check 1: file exists and overwrite not set
+                        if (is_file($this->config['path'].$file['newFilename']))
+                        {
+                            if ($this->config['overwrite']) //delete existing file if it exists and overwrite is set
+                                unlink($this->config['path'].$file['newFilename']);
+                            else //file exists but overwrite is not set; do not upload
+                                $error = 'A file already exists with the name specified ('.$file['newFilename'].').';
+                        }
 
-					// error check 2: file type
-					if (!$error && $this->config['fileTypes'] != '*' && is_array($this->config['fileTypes']))
-					{
-						if ($file['name'] != "")
-						{
-							if (!in_array($file['extension'], $this->config['fileTypes']))
-							{
-								if ($fileTypesImage)
-									$error = 'You must upload an image file.';
-								else
-									$error = 'You must upload a file in one of the following formats: '.implode(', ', $this->config['fileTypes']).'. ('.$file['name'].')';
-							}
-						}
-						else
-						{
-							if ($fileTypesImage)
-								$error = 'You must upload an image.';
-							else
-								$error = 'You must upload a file.';
-						}
-					}
+                        // error check 2: file type
+                        if (!$error && $this->config['fileTypes'] != '*' && is_array($this->config['fileTypes']))
+                        {
+                            if ($file['name'] != "")
+                            {
+                                if (!in_array($file['extension'], $this->config['fileTypes']))
+                                {
+                                    if ($fileTypesImage)
+                                        $error = 'You must upload an image file.';
+                                    else
+                                        $error = 'You must upload a file in one of the following formats: '.implode(', ', $this->config['fileTypes']).'. ('.$file['name'].')';
+                                }
+                            }
+                            else
+                            {
+                                if ($fileTypesImage)
+                                    $error = 'You must upload an image.';
+                                else
+                                    $error = 'You must upload a file.';
+                            }
+                        }
 
-					// error check 3: maximum file size
-					if (!$error && $this->config['maxFileSize'])
-					{
-						$maxFileSize = $this->config['maxFileSize'];
+                        // error check 3: maximum file size
+                        if (!$error && $this->config['maxFileSize'])
+                        {
+                            $maxFileSize = $this->config['maxFileSize'];
 
-						if (substr($this->config['maxFileSize'], -2) == "KB") {
-							$maxFileSizeBytes = str_replace('KB', '', $this->config['maxFileSize']) * 1024;
-						} else if (substr($this->config['maxFileSize'], -2) == "MB") {
-							$maxFileSizeBytes = str_replace('MB', '', $this->config['maxFileSize']) * 1024 * 1024;
-						} else {
-							$maxFileSizeBytes = str_replace('B', '', $this->config['maxFileSize']);
-							$maxFileSize      = $this->config['maxFileSize'].'B';
-						}
+                            if (substr($this->config['maxFileSize'], -2) == "KB") {
+                                $maxFileSizeBytes = str_replace('KB', '', $this->config['maxFileSize']) * 1024;
+                            } else if (substr($this->config['maxFileSize'], -2) == "MB") {
+                                $maxFileSizeBytes = str_replace('MB', '', $this->config['maxFileSize']) * 1024 * 1024;
+                            } else {
+                                $maxFileSizeBytes = str_replace('B', '', $this->config['maxFileSize']);
+                                $maxFileSize      = $this->config['maxFileSize'].'B';
+                            }
 
-						if ($file['size'] > $maxFileSizeBytes)
-							$error = 'Your file must not exceed '.$maxFileSize.'.';
-					}
+                            if ($file['size'] > $maxFileSizeBytes)
+                                $error = 'Your file must not exceed '.$maxFileSize.'.';
+                        }
 
-					// error check 4: minimum image dimensions
-					if (!$error && in_array($file['extension'], $this->imageExtensions) && !empty($dimensions) && ($this->config['imageMinWidth'] || $this->config['imageMinHeight']))
-					{
-						$errorWidth  = $this->config['imageMinWidth']  && $dimensions['w'] < $this->config['imageMinWidth'];
-						$errorHeight = $this->config['imageMinHeight'] && $dimensions['h'] < $this->config['imageMinHeight'];
+                        // error check 4: minimum image dimensions
+                        if (!$error && in_array($file['extension'], $this->imageExtensions) && !empty($dimensions) && ($this->config['imageMinWidth'] || $this->config['imageMinHeight']))
+                        {
+                            $errorWidth  = $this->config['imageMinWidth']  && $dimensions['w'] < $this->config['imageMinWidth'];
+                            $errorHeight = $this->config['imageMinHeight'] && $dimensions['h'] < $this->config['imageMinHeight'];
 
-						if ($errorWidth || $errorHeight)
-						{
-							if ($this->config['imageMinWidth'] && $this->config['imageMinHeight'])
-								$error = 'Your image must be at least '.$this->config['imageMinWidth'].' x '.$this->config['imageMinHeight'].'. ';
-							elseif ($this->config['imageMinWidth'])
-								$error = 'Your image must be at least '.$this->config['imageMinWidth'].' pixels in width.';
-							elseif ($this->config['imageMinHeight'])
-								$error = 'Your image must be at least '.$this->config['imageMinHeight'].' pixels in height.';
+                            if ($errorWidth || $errorHeight)
+                            {
+                                if ($this->config['imageMinWidth'] && $this->config['imageMinHeight'])
+                                    $error = 'Your image must be at least '.$this->config['imageMinWidth'].' x '.$this->config['imageMinHeight'].'. ';
+                                elseif ($this->config['imageMinWidth'])
+                                    $error = 'Your image must be at least '.$this->config['imageMinWidth'].' pixels in width.';
+                                elseif ($this->config['imageMinHeight'])
+                                    $error = 'Your image must be at least '.$this->config['imageMinHeight'].' pixels in height.';
 
-							$error .= 'Your uploaded image dimensions were '.$dimensions['w'].' x '.$dimensions['h'].'.';
-						}
-					}
+                                $error .= 'Your uploaded image dimensions were '.$dimensions['w'].' x '.$dimensions['h'].'.';
+                            }
+                        }
 
-					// error check 5: maximum image dimensions
-					$maxWidthExceeded  = false;
-					$maxHeightExceeded = false;
+                        // error check 5: maximum image dimensions
+                        $maxWidthExceeded  = false;
+                        $maxHeightExceeded = false;
 
-					if (!$error && in_array($file['extension'], $this->imageExtensions) && !empty($dimensions)
-					&& ($this->config['imageMaxWidth'] || $this->config['imageMaxHeight']))
-					{
-						if ($this->config['imageMaxWidth'] && $dimensions['w'] > $this->config['imageMaxWidth'])
-							$maxWidthExceeded = true;
+                        if (!$error && in_array($file['extension'], $this->imageExtensions) && !empty($dimensions)
+                        && ($this->config['imageMaxWidth'] || $this->config['imageMaxHeight']))
+                        {
+                            if ($this->config['imageMaxWidth'] && $dimensions['w'] > $this->config['imageMaxWidth'])
+                                $maxWidthExceeded = true;
 
-						if ($this->config['imageMaxHeight'] && $dimensions['h'] > $this->config['imageMaxHeight'])
-							$maxHeightExceeded = true;
+                            if ($this->config['imageMaxHeight'] && $dimensions['h'] > $this->config['imageMaxHeight'])
+                                $maxHeightExceeded = true;
 
-						if (!$this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded))
-						{
-							if ($this->config['imageMaxWidth'] && $this->config['imageMaxHeight'])
-								$error = 'Your image must be '.$this->config['imageMaxWidth'].' x '.$this->config['imageMaxHeight'].' or less. ';
-							elseif ($this->config['imageMaxWidth'])
-								$error = 'Your image must be '.$this->config['imageMaxWidth'].' pixels in width or less.';
-							elseif ($this->config['imageMaxHeight'])
-								$error = 'Your image must be '.$this->config['imageMaxHeight'].' pixels in height or less.';
+                            if (!$this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded))
+                            {
+                                if ($this->config['imageMaxWidth'] && $this->config['imageMaxHeight'])
+                                    $error = 'Your image must be '.$this->config['imageMaxWidth'].' x '.$this->config['imageMaxHeight'].' or less. ';
+                                elseif ($this->config['imageMaxWidth'])
+                                    $error = 'Your image must be '.$this->config['imageMaxWidth'].' pixels in width or less.';
+                                elseif ($this->config['imageMaxHeight'])
+                                    $error = 'Your image must be '.$this->config['imageMaxHeight'].' pixels in height or less.';
 
-							$error .= 'Your uploaded image dimensions were '.$dimensions['w'].' x '.$dimensions['h'].'.';
-						}
-					}
+                                $error .= 'Your uploaded image dimensions were '.$dimensions['w'].' x '.$dimensions['h'].'.';
+                            }
+                        }
 
-					if ($this->config['fieldNameAsFileIndex'])
-						$fileIndex = $file['field'];
-					else
-						$fileIndex = $f - 1;
+                        if (!$error)
+                        {
+                            // upload file to selected directory
+                            $fileTransfered = move_uploaded_file($file['tmpName'], $this->config['path'].$file['newFilename']);
 
-					if (!$error)
-					{
-						// upload file to selected directory
-						$fileTransfered = move_uploaded_file($file['tmpName'], $this->config['path'].$file['newFilename']);
+                            // resize image if necessary
+                            if ($fileTransfered)
+                            {
+                                if (in_array($file['extension'], $this->imageExtensions))
+                                {
+                                    if ($this->config['imageResize']
+                                    || ($this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded)))
+                                    {
+                                        // configure resized image dimensions
+                                        $resizeType = $this->config['imageResizeDefaultType'];
 
-						// resize image if necessary
-						if ($fileTransfered)
-						{
-							if (in_array($file['extension'], $this->imageExtensions))
-							{
-								if ($this->config['imageResize']
-								|| ($this->config['imageResizeMax'] && ($maxWidthExceeded || $maxHeightExceeded)))
-								{
-									// configure resized image dimensions
-									$resizeType = $this->config['imageResizeDefaultType'];
+                                        if ($this->config['imageCrop'])
+                                            $resizeType = "crop";
 
-									if ($this->config['imageCrop'])
-										$resizeType = "crop";
+                                        if ($this->config['imageResize'])
+                                        {
+                                            $resizeDimensions = [
+                                                'w' => $this->config['imageDimensions']['w'],
+                                                'h' => $this->config['imageDimensions']['h'],
+                                            ];
+                                        }
+                                        else
+                                        {
+                                            if ($maxWidthExceeded && $maxHeightExceeded)
+                                            {
+                                                $resizeDimensions = [
+                                                    'w' => $this->config['imageMaxWidth'],
+                                                    'h' => $this->config['imageMaxHeight'],
+                                                ];
+                                            }
+                                            else if ($maxWidthExceeded)
+                                            {
+                                                $resizeDimensions = [
+                                                    'w' => $this->config['imageMaxWidth'],
+                                                    'h' => false,
+                                                ];
 
-									if ($this->config['imageResize'])
-									{
-										$resizeDimensions = [
-											'w' => $this->config['imageDimensions']['w'],
-											'h' => $this->config['imageDimensions']['h'],
-										];
-									}
-									else
-									{
-										if ($maxWidthExceeded && $maxHeightExceeded)
-										{
-											$resizeDimensions = [
-												'w' => $this->config['imageMaxWidth'],
-												'h' => $this->config['imageMaxHeight'],
-											];
-										}
-										else if ($maxWidthExceeded)
-										{
-											$resizeDimensions = [
-												'w' => $this->config['imageMaxWidth'],
-												'h' => false,
-											];
+                                                $resizeType = 'landscape';
+                                            }
+                                            else if ($maxHeightExceeded)
+                                            {
+                                                $resizeDimensions = [
+                                                    'w' => false,
+                                                    'h' => $this->config['imageMaxHeight'],
+                                                ];
 
-											$resizeType = 'landscape';
-										}
-										else if ($maxHeightExceeded)
-										{
-											$resizeDimensions = [
-												'w' => false,
-												'h' => $this->config['imageMaxHeight'],
-											];
+                                                $resizeType = 'portrait';
+                                            }
+                                        }
 
-											$resizeType = 'portrait';
-										}
-									}
+                                        // resize image
+                                        $image = Image::make($this->config['path'].$file['newFilename']);
 
-									// resize image
-									$image = Image::make($this->config['path'].$file['newFilename']);
+                                        if ($resizeType == "crop")
+                                        {
+                                            $image->resize($resizeDimensions['w'] * 1.4, $resizeDimensions['h'] * 1.4, function ($constraint)
+                                            {
+                                                $constraint->aspectRatio();
+                                            });
 
-									if ($resizeType == "crop")
-									{
-										$image->resize($resizeDimensions['w'] * 1.4, $resizeDimensions['h'] * 1.4, function ($constraint)
-										{
-											$constraint->aspectRatio();
-										});
+                                            $image->crop($resizeDimensions['w'], $resizeDimensions['h']);
+                                        }
+                                        else
+                                        {
+                                            $image->resize($resizeDimensions['w'], $resizeDimensions['h']);
+                                        }
 
-										$image->crop($resizeDimensions['w'], $resizeDimensions['h']);
-									}
-									else
-									{
-										$image->resize($resizeDimensions['w'], $resizeDimensions['h']);
-									}
+                                        $image->save($this->config['path'].$file['newFilename'], $this->config['imageResizeQuality']);
+                                    }
 
-									$image->save($this->config['path'].$file['newFilename'], $this->config['imageResizeQuality']);
-								}
+                                    // create thumbnail image if necessary
+                                    if ($this->config['imageThumb'])
+                                        $this->createThumbnailImage($file);
+                                }
 
-								// create thumbnail image if necessary
-								if ($this->config['imageThumb'])
-									$this->createThumbnailImage($file);
-							}
+                                $file = $this->addImageDimensionsData($file);
+                            }
 
-							$file = $this->addImageDimensionsData($file);
-						}
+                            if ($fileTransfered)
+                            {
+                                $this->addFile($file);
 
-						if ($fileTransfered)
-						{
-							$this->addFile($file);
+                                $this->returnData['error'] = false;
+                            }
+                            else
+                            {
+                                $this->returnData['files'][$fieldName][$fileIndex]['error'] = 'Something went wrong. Please try again.';
+                            }
+                        } else {
+                            $this->returnData['files'][$fieldName][$fileIndex]['error'] = $error;
+                        }
 
-							$this->returnData['error'] = false;
-						}
-						else
-						{
-							$this->returnData['files'][$fileIndex]['error'] = 'Something went wrong. Please try again.';
-						}
-					} else {
-						$this->returnData['files'][$fileIndex]['error'] = $error;
-					}
+                        $this->returnData['files'][$fieldName][$fileIndex]['field'] = $file['field'];
+                        $this->returnData['files'][$fieldName][$fileIndex]['key']   = $file['key'];
 
-					$this->returnData['files'][$fileIndex]['field'] = $file['field'];
-					$this->returnData['files'][$fileIndex]['key']   = $file['key'];
+                        $this->returnData['attempted'] += (int) $attemptedUpload;
+                    }
 
-					$this->returnData['attempted'] += (int) $attemptedUpload;
-				}
-
-				$f ++;
+                    $f ++;
+                } // end foreach files
 			} // end foreach files
 
 			// create thumbnail image if necessary (from thumbnail image field)
@@ -380,9 +378,6 @@ class Upstream {
 
 				$this->returnData['attempted'] ++;
 			}
-
-			if ($this->config['returnSingleResult'])
-				return $this->returnData = $this->returnData['files'][0];
 
 			// return result
 			if ($this->config['returnJson'])
@@ -511,7 +506,7 @@ class Upstream {
 	{
 		$file = $this->addAdditionalFileData($file);
 
-		$this->returnData['files'][$file['field']] = [
+		$this->returnData['files'][$file['field']][$file['key']] = [
 			'name'            => $file['displayName'],
 			'filename'        => $file['newFilename'],
 			'basename'        => $file['basename'],
